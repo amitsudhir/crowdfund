@@ -3,13 +3,13 @@
 ## ⚡ Quick Start
 
 ```bash
-git clone <your-repo-url>
-cd BizThon
+git clone https://github.com/amitsudhir/crowdfund.git
+cd crowdfund
+
 ```
 
 2. Install dependencies:
 ```bash
-cd crowdfund
 npm install
 ```
 
