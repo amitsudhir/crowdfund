@@ -87,22 +87,9 @@ const SetupChecker = () => {
     );
   }
 
-  // Don't show anything if everything is good and no wallet connected
-  if (allGood && !isDemoMode) {
-    return null;
-  }
-
+  // Hide completely if everything is working fine
   if (allGood) {
-    // Show success banner only in demo mode
-    return (
-      <div style={styles.successBanner}>
-        <span style={styles.successIcon}>✅</span>
-        <span style={styles.successText}>
-          Ready • Connected to Base Sepolia • Contract deployed
-          {status.isSeeded && " • Demo campaigns loaded"}
-        </span>
-      </div>
-    );
+    return null;
   }
 
   return (

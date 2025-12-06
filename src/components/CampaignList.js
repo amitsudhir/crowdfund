@@ -2,12 +2,15 @@ import React, { useState, useEffect } from "react";
 import { getReadOnlyContract } from "../config/contract";
 import CampaignCard from "./CampaignCard";
 import CampaignDetail from "./CampaignDetail";
+import SearchBar from "./SearchBar";
+import ActivityFeed from "./ActivityFeed";
 
 const CampaignList = ({ account, refreshTrigger }) => {
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCampaign, setSelectedCampaign] = useState(null);
   const [filter, setFilter] = useState("ALL");
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     loadCampaigns();
@@ -68,7 +71,17 @@ const CampaignList = ({ account, refreshTrigger }) => {
     return filtered;
   };
 
-  const filteredCampaigns = getFilteredCampaigns();
+  let filteredCampaigns = getFilteredCampaigns();
+  
+  // Apply search filter
+  if (searchTerm) {
+    filteredCampaigns = filteredCampaigns.filter((c) =>
+      c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.creatorInfo.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }
 
   if (loading) {
     return (
@@ -81,7 +94,11 @@ const CampaignList = ({ account, refreshTrigger }) => {
 
   return (
     <div style={styles.container}>
-      <div style={styles.filters}>
+      <SearchBar searchTerm={searchTerm} onSearch={setSearchTerm} />
+      
+      <div style={styles.mainContent} className="campaign-list-main-content">
+        <div style={styles.campaignsSection}>
+          <div style={styles.filters}>
         {["ALL", "ACTIVE", "FUNDED", "EXPIRED", "MY_CAMPAIGNS"].map((f) => (
           <button
             key={f}
@@ -119,6 +136,13 @@ const CampaignList = ({ account, refreshTrigger }) => {
         </div>
       )}
 
+        </div>
+        
+        <div style={styles.sidebar} className="campaign-list-sidebar">
+          <ActivityFeed />
+        </div>
+      </div>
+
       {selectedCampaign && (
         <CampaignDetail
           campaign={selectedCampaign}
@@ -136,9 +160,22 @@ const CampaignList = ({ account, refreshTrigger }) => {
 
 const styles = {
   container: {
-    maxWidth: "1200px",
+    maxWidth: "1400px",
     margin: "0 auto",
     padding: "2rem 1rem",
+  },
+  mainContent: {
+    display: "grid",
+    gridTemplateColumns: "1fr 350px",
+    gap: "2rem",
+    alignItems: "start",
+  },
+  campaignsSection: {
+    minWidth: 0,
+  },
+  sidebar: {
+    position: "sticky",
+    top: "100px",
   },
   filters: {
     display: "flex",
@@ -164,7 +201,7 @@ const styles = {
   },
   grid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+    gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
     gap: "2rem",
   },
   loading: {
@@ -189,21 +226,23 @@ const styles = {
     fontSize: "4rem",
     marginBottom: "1rem",
   },
-  setupNote: {
-    marginTop: "2rem",
-    padding: "1.5rem",
-    background: "#fef3c7",
-    borderRadius: "15px",
-    maxWidth: "500px",
-    margin: "2rem auto 0",
-  },
-  setupText: {
-    color: "#92400e",
-    fontSize: "0.95rem",
-    lineHeight: "1.8",
-    margin: 0,
-    textAlign: "left",
-  },
 };
+
+// Add media query styles
+const mediaQueryStyle = document.createElement('style');
+mediaQueryStyle.textContent = `
+  @media (max-width: 1024px) {
+    .campaign-list-main-content {
+      grid-template-columns: 1fr !important;
+    }
+    .campaign-list-sidebar {
+      position: static !important;
+    }
+  }
+`;
+if (!document.querySelector('[data-campaign-list-styles]')) {
+  mediaQueryStyle.setAttribute('data-campaign-list-styles', 'true');
+  document.head.appendChild(mediaQueryStyle);
+}
 
 export default CampaignList;

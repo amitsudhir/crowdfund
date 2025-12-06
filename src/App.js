@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Navbar from "./components/Navbar";
 import CampaignList from "./components/CampaignList";
 import CreateCampaign from "./components/CreateCampaign";
 import Analytics from "./components/Analytics";
 import MyDonations from "./components/MyDonations";
+import MyWithdrawals from "./components/MyWithdrawals";
+import MyCampaigns from "./components/MyCampaigns";
 import SetupChecker from "./components/SetupChecker";
 
 function App() {
@@ -53,7 +57,7 @@ function App() {
 
   const connectWallet = async () => {
     if (!window.ethereum) {
-      alert("Please install MetaMask!");
+      toast.error("Please install MetaMask!");
       return;
     }
 
@@ -62,10 +66,10 @@ function App() {
         method: "eth_requestAccounts",
       });
       setAccount(accounts[0]);
-      alert("Wallet connected successfully! 🎉");
+      toast.success("Wallet connected successfully! 🎉");
     } catch (error) {
       console.error("Failed to connect wallet:", error);
-      alert("Failed to connect wallet: " + error.message);
+      toast.error("Failed to connect wallet: " + error.message);
     }
   };
 
@@ -96,7 +100,16 @@ function App() {
             }}
             onClick={() => setActiveTab("campaigns")}
           >
-            📋 Campaigns
+            📋 All Campaigns
+          </button>
+          <button
+            style={{
+              ...styles.tab,
+              ...(activeTab === "myCampaigns" ? styles.tabActive : {}),
+            }}
+            onClick={() => setActiveTab("myCampaigns")}
+          >
+            🎯 My Campaigns
           </button>
           <button
             style={{
@@ -106,6 +119,15 @@ function App() {
             onClick={() => setActiveTab("donations")}
           >
             💝 My Donations
+          </button>
+          <button
+            style={{
+              ...styles.tab,
+              ...(activeTab === "withdrawals" ? styles.tabActive : {}),
+            }}
+            onClick={() => setActiveTab("withdrawals")}
+          >
+            💰 My Withdrawals
           </button>
           <button
             style={{
@@ -129,7 +151,9 @@ function App() {
         {activeTab === "campaigns" && (
           <CampaignList account={account} refreshTrigger={refreshTrigger} />
         )}
+        {activeTab === "myCampaigns" && <MyCampaigns account={account} />}
         {activeTab === "donations" && <MyDonations account={account} />}
+        {activeTab === "withdrawals" && <MyWithdrawals account={account} />}
         {activeTab === "analytics" && <Analytics />}
       </div>
 
@@ -139,6 +163,19 @@ function App() {
           onClose={() => setShowCreateModal(false)}
         />
       )}
+
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </div>
   );
 }

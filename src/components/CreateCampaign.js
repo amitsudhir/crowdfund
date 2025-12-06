@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { ethers } from "ethers";
+import { toast } from "react-toastify";
 import { getContract } from "../config/contract";
 import { CATEGORIES, CURRENCY, inrToEth } from "../config/config";
 
@@ -34,6 +35,7 @@ const CreateCampaign = ({ onSuccess, onClose }) => {
       const goalInWei = ethers.parseEther(goalInEth);
       const durationInSeconds = parseInt(formData.duration) * 24 * 60 * 60; // Convert days to seconds
 
+      toast.info("Creating campaign...");
       const tx = await contract.createCampaign(
         formData.title,
         formData.description,
@@ -45,11 +47,11 @@ const CreateCampaign = ({ onSuccess, onClose }) => {
       );
 
       await tx.wait();
-      alert("Campaign created successfully!");
+      toast.success("Campaign created successfully! 🎉");
       onSuccess();
     } catch (error) {
       console.error(error);
-      alert("Failed to create campaign: " + error.message);
+      toast.error("Failed to create campaign: " + error.message);
     } finally {
       setLoading(false);
     }

@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { ethers } from "ethers";
+import { toast } from "react-toastify";
 import { getContract } from "../config/contract";
 import { CURRENCY, ethToInr, inrToEth } from "../config/config";
 
@@ -57,23 +58,31 @@ const CampaignDetail = ({ campaign, account, onClose, onSuccess }) => {
 
   const handleDonate = async () => {
     if (!donateAmount || parseFloat(donateAmount) <= 0) {
-      alert("Please enter a valid amount");
+      toast.error("Please enter a valid amount");
+      return;
+    }
+
+    // Check minimum donation (100 INR = 0.0004 ETH approximately)
+    const minDonationEth = inrToEth("100");
+    if (parseFloat(donateAmount) < parseFloat(minDonationEth)) {
+      toast.error("Minimum donation is ₹100");
       return;
     }
 
     setLoading(true);
     try {
       const { contract } = await getContract();
+      toast.info("Processing donation...");
       const tx = await contract.donate(campaign.id, {
         value: ethers.parseEther(donateAmount),
       });
       await tx.wait();
-      alert("Donation successful! 🎉");
+      toast.success("Donation successful! 🎉");
       setDonateAmount("");
       onSuccess();
     } catch (error) {
       console.error(error);
-      alert("Donation failed: " + error.message);
+      toast.error("Donation failed: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -83,13 +92,14 @@ const CampaignDetail = ({ campaign, account, onClose, onSuccess }) => {
     setLoading(true);
     try {
       const { contract } = await getContract();
+      toast.info("Processing withdrawal...");
       const tx = await contract.withdraw(campaign.id);
       await tx.wait();
-      alert("Withdrawal successful! 💰");
+      toast.success("Withdrawal successful! 💰");
       onSuccess();
     } catch (error) {
       console.error(error);
-      alert("Withdrawal failed: " + error.message);
+      toast.error("Withdrawal failed: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -99,13 +109,14 @@ const CampaignDetail = ({ campaign, account, onClose, onSuccess }) => {
     setLoading(true);
     try {
       const { contract } = await getContract();
+      toast.info("Processing refund...");
       const tx = await contract.claimRefund(campaign.id);
       await tx.wait();
-      alert("Refund claimed successfully! 💸");
+      toast.success("Refund claimed successfully! 💸");
       onSuccess();
     } catch (error) {
       console.error(error);
-      alert("Refund failed: " + error.message);
+      toast.error("Refund failed: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -194,6 +205,22 @@ const CampaignDetail = ({ campaign, account, onClose, onSuccess }) => {
                 <span style={styles.highlight}>{myContribution} ETH</span>
               </div>
             )}
+            {isOwner && campaign.withdrawn && (
+              <div style={styles.infoRow}>
+                <span>✅ Withdrawal Status:</span>
+                <span style={{ ...styles.highlight, color: "#10b981" }}>
+                  Funds Withdrawn ({ethers.formatEther(campaign.raisedAmount)} ETH)
+                </span>
+              </div>
+            )}
+            {isOwner && !campaign.withdrawn && status === "FUNDED" && (
+              <div style={styles.infoRow}>
+                <span>⏳ Withdrawal Status:</span>
+                <span style={{ ...styles.highlight, color: "#f59e0b" }}>
+                  Ready to Withdraw
+                </span>
+              </div>
+            )}
           </div>
 
           {canDonate && (
@@ -208,14 +235,14 @@ const CampaignDetail = ({ campaign, account, onClose, onSuccess }) => {
                     const ethValue = inrToEth(inrValue);
                     setDonateAmount(ethValue);
                   }}
-                  placeholder="Amount in INR"
+                  placeholder="Minimum ₹100"
                   step="100"
                   min="100"
                   style={styles.input}
                 />
               </div>
               <div style={styles.ethEquivalent}>
-                ≈ {donateAmount || '0'} ETH
+                ≈ {donateAmount || '0'} ETH {donateAmount && parseFloat(donateAmount) < parseFloat(inrToEth("100")) && <span style={{color: '#ef4444'}}>(Min: ₹100)</span>}
               </div>
               <button
                 onClick={handleDonate}
