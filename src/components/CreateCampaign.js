@@ -100,10 +100,10 @@ const CreateCampaign = ({ onSuccess, onClose }) => {
                 value={formData.goalAmount}
                 onChange={handleChange}
                 required
-                step="1000"
-                min="1000"
+                step="100"
+                min="0"
                 style={styles.input}
-                placeholder="50000"
+                placeholder="10000"
               />
               <div style={styles.ethEquivalent}>
                 ≈ {formData.goalAmount ? inrToEth(formData.goalAmount) : '0'} ETH
