@@ -1,32 +1,91 @@
-# 🚀 Crowdfund DApp - Setup
+# 🚀 Crowdfund DApp
 
-## ⚡ Quick Start
+A decentralized crowdfunding platform where users can create campaigns and contribute using crypto.
 
+---
+
+## ⚡ Quick Setup
+
+### 1. Clone the Repository
 ```bash
-git clone <your-repo-url>
-cd BizThon
+git clone https://github.com/amitsudhir/crowdfund.git
+cd crowdfund
 ```
 
-2. Install dependencies:
+### 2. Install Dependencies
 ```bash
-cd crowdfund
 npm install
 ```
 
-3. Start the development server:
+### 3. Start the Development Server
 ```bash
-git push origin main
-# Then deploy on Vercel
+npm run dev
 ```
 
 ---
 
-## 📊 Seeded Campaigns
+## 🌐 Smart Contract (Deployed on Base Sepolia)
 
-1. Community Center (80% funded)
-2. Medical Equipment (10% funded)
-3. Coding Bootcamp (40% funded)
+**CampaignFactory Contract Address:** `0xf86eFF9d6B0e471776828C826A0D61107D737A09`
 
 ---
 
-**That's it! Everything automated.**
+## 📁 Project Structure
+
+```
+crowdfund/
+│
+├── /contracts           # Solidity smart contracts
+├── /pages               # Next.js pages
+├── /components          # UI components
+├── /context             # Blockchain & wallet context
+├── /public              # Assets
+└── package.json
+```
+
+---
+
+## 📊 Pre-Seeded Test Campaigns
+
+| Campaign          | Funding Status |
+| ----------------- | -------------- |
+| Community Center  | 80% funded     |
+| Medical Equipment | 10% funded     |
+| Coding Bootcamp   | 40% funded     |
+
+---
+
+## 🚀 Deploy to Vercel
+
+1. Push updates to `main`
+```bash
+git add .
+git commit -m "update"
+git push origin main
+```
+
+2. Login to **Vercel → Import GitHub Repo → Deploy**
+
+---
+
+## 🛠 Tech Stack
+
+- Solidity  
+- Hardhat  
+- Base Sepolia Testnet  
+- Next.js  
+- Wagmi / Viem  
+- MetaMask  
+
+---
+
+## 📌 Notes
+
+- Switch wallet network to **Base Sepolia** before interacting.
+- Use Base Sepolia faucet if you need test ETH.
+
+---
+
+### 🎉 You're all set!
+
+Clone → Install → Run → Deploy. Everything is pre-configured.
