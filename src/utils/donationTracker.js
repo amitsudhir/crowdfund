@@ -23,6 +23,13 @@ export const storeDonation = (account, campaignId, txHash, amount, title, blockN
       donations[campaignId] = [];
     }
     
+    // Check if this transaction hash already exists to prevent duplicates
+    const existingTx = donations[campaignId].find(tx => tx.txHash === txHash);
+    if (existingTx) {
+      console.log(`Transaction ${txHash} already stored for campaign ${campaignId}`);
+      return;
+    }
+    
     donations[campaignId].push({
       txHash,
       amount,

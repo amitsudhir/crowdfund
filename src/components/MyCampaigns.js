@@ -184,9 +184,30 @@ const MyCampaigns = ({ account }) => {
 };
 
 const CampaignCard = ({ campaign, onWithdraw, withdrawing }) => {
+  const [proofCount, setProofCount] = useState(0);
+  const [contract, setContract] = useState(null);
+  
+  useEffect(() => {
+    const loadProofCount = async () => {
+      try {
+        const { contract } = await getContract();
+        setContract(contract);
+        const proofs = await contract.getUsageProofs(campaign.id);
+        setProofCount(proofs.length);
+      } catch (error) {
+        console.error("Failed to load proof count:", error);
+      }
+    };
+    
+    if (campaign.goalReached && !campaign.withdrawn && !campaign.isActive) {
+      loadProofCount();
+    }
+  }, [campaign.id, campaign.goalReached, campaign.withdrawn, campaign.isActive]);
+
   const progress = (parseFloat(campaign.raisedAmount) / parseFloat(campaign.goalAmount)) * 100;
   const daysLeft = Math.ceil((campaign.deadline - new Date()) / (1000 * 60 * 60 * 24));
-  const canWithdraw = campaign.goalReached && !campaign.withdrawn && !campaign.isActive;
+  const needsProof = campaign.goalReached && !campaign.withdrawn && !campaign.isActive && proofCount === 0;
+  const canWithdraw = campaign.goalReached && !campaign.withdrawn && !campaign.isActive && proofCount > 0;
 
   return (
     <div style={styles.card}>
@@ -242,6 +263,16 @@ const CampaignCard = ({ campaign, onWithdraw, withdrawing }) => {
             </span>
           </div>
         </div>
+
+        {needsProof && (
+          <div style={styles.proofRequired}>
+            <div style={styles.proofIcon}>⚠️</div>
+            <div style={styles.proofText}>
+              <strong>Proof Required</strong><br />
+              Upload fund utilization proof to withdraw
+            </div>
+          </div>
+        )}
 
         {canWithdraw && (
           <button
@@ -447,6 +478,24 @@ const styles = {
     borderRadius: "10px",
     textAlign: "center",
     fontWeight: "600",
+  },
+  proofRequired: {
+    display: "flex",
+    alignItems: "center",
+    gap: "0.75rem",
+    padding: "1rem",
+    background: "#fef3c7",
+    border: "2px solid #f59e0b",
+    borderRadius: "10px",
+    marginBottom: "1rem",
+  },
+  proofIcon: {
+    fontSize: "1.25rem",
+  },
+  proofText: {
+    fontSize: "0.9rem",
+    color: "#92400e",
+    lineHeight: "1.4",
   },
   loading: {
     textAlign: "center",

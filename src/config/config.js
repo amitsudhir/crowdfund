@@ -1,5 +1,5 @@
 // Contract configuration - Auto-updated by deploy script
-export const CONTRACT_ADDRESS = "0x4cB30f15d42683ecbCD70968fFeA3ad0327991E2"; // Update after deployment
+export const CONTRACT_ADDRESS = "0xD88E8A75c6e4bd2078681Ba90DBF9f3f0C3d5374"; // Fresh deployment with mandatory proof requirement
 
 export const NETWORK_NAME = "Base Sepolia";
 

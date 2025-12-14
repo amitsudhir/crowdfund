@@ -5,6 +5,8 @@ import { getContract } from "../config/contract";
 import { CURRENCY, ethToInr, inrToEth } from "../config/config";
 import { storeWithdrawal } from "../utils/withdrawalTracker";
 import { storeDonation } from "../utils/donationTracker";
+import ProofUpload from "./ProofUpload";
+import ProofViewer from "./ProofViewer";
 
 const CampaignDetail = ({ campaign, account, onClose, onSuccess }) => {
   const [donateAmount, setDonateAmount] = useState("");
@@ -12,6 +14,8 @@ const CampaignDetail = ({ campaign, account, onClose, onSuccess }) => {
   const [myContribution, setMyContribution] = useState("0");
   const [timeLeft, setTimeLeft] = useState("");
   const [status, setStatus] = useState("ACTIVE");
+  const [contract, setContract] = useState(null);
+  const [proofCount, setProofCount] = useState(0);
 
   useEffect(() => {
     loadMyContribution();
@@ -19,6 +23,25 @@ const CampaignDetail = ({ campaign, account, onClose, onSuccess }) => {
     const interval = setInterval(updateTimeLeft, 1000);
     return () => clearInterval(interval);
   }, [campaign, account]);
+
+  useEffect(() => {
+    // Load contract for proof functionality
+    const loadContract = async () => {
+      try {
+        const { contract } = await getContract();
+        setContract(contract);
+        
+        // Load proof count for withdrawal validation
+        if (campaign?.id) {
+          const proofs = await contract.getUsageProofs(campaign.id);
+          setProofCount(proofs.length);
+        }
+      } catch (error) {
+        console.error("Failed to load contract:", error);
+      }
+    };
+    loadContract();
+  }, [campaign?.id]);
 
   const loadMyContribution = async () => {
     if (!account) return;
@@ -169,7 +192,8 @@ const CampaignDetail = ({ campaign, account, onClose, onSuccess }) => {
   );
 
   const isOwner = account && account.toLowerCase() === campaign.owner.toLowerCase();
-  const canWithdraw = isOwner && !campaign.withdrawn && status === "FUNDED";
+  const hasProofRequirement = isOwner && !campaign.withdrawn && status === "FUNDED" && proofCount === 0;
+  const canWithdraw = isOwner && !campaign.withdrawn && status === "FUNDED" && proofCount > 0;
   const canRefund = !isOwner && status === "EXPIRED" && parseFloat(myContribution) > 0;
   const canDonate = status === "ACTIVE";
 
@@ -295,6 +319,19 @@ const CampaignDetail = ({ campaign, account, onClose, onSuccess }) => {
             </div>
           )}
 
+          {hasProofRequirement && (
+            <div style={styles.proofRequirement}>
+              <div style={styles.requirementIcon}>⚠️</div>
+              <div style={styles.requirementContent}>
+                <h4 style={styles.requirementTitle}>Proof Required for Withdrawal</h4>
+                <p style={styles.requirementText}>
+                  You must upload at least one fund utilization proof before withdrawing funds. 
+                  This ensures transparency for your donors.
+                </p>
+              </div>
+            </div>
+          )}
+
           {canWithdraw && (
             <button
               onClick={handleWithdraw}
@@ -320,6 +357,36 @@ const CampaignDetail = ({ campaign, account, onClose, onSuccess }) => {
               Please connect your wallet to interact with this campaign
             </div>
           )}
+
+          {/* Proof of Fund Utilization Section */}
+          <div style={styles.proofSection}>
+            {/* Show upload section only to campaign owner */}
+            {isOwner && contract && (
+              <ProofUpload 
+                campaignId={campaign.id.toString()}
+                onProofUploaded={async (ipfsHash) => {
+                  try {
+                    const tx = await contract.addUsageProof(campaign.id, ipfsHash);
+                    await tx.wait();
+                    // Update proof count
+                    setProofCount(prev => prev + 1);
+                    // Refresh the proof viewer
+                    window.location.reload();
+                  } catch (error) {
+                    console.error("Failed to add proof to contract:", error);
+                  }
+                }}
+              />
+            )}
+            
+            {/* Show proof viewer to everyone */}
+            {contract && (
+              <ProofViewer 
+                campaignId={campaign.id.toString()}
+                contract={contract}
+              />
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -548,6 +615,40 @@ const styles = {
     borderRadius: "12px",
     textAlign: "center",
     fontWeight: "600",
+  },
+  proofSection: {
+    marginTop: "2rem",
+    paddingTop: "2rem",
+    borderTop: "2px solid #e5e7eb",
+  },
+  proofRequirement: {
+    display: "flex",
+    alignItems: "flex-start",
+    gap: "1rem",
+    background: "#fef3c7",
+    border: "2px solid #f59e0b",
+    borderRadius: "12px",
+    padding: "1.5rem",
+    marginBottom: "1rem",
+  },
+  requirementIcon: {
+    fontSize: "1.5rem",
+    flexShrink: 0,
+  },
+  requirementContent: {
+    flex: 1,
+  },
+  requirementTitle: {
+    fontSize: "1.1rem",
+    fontWeight: "700",
+    color: "#92400e",
+    margin: "0 0 0.5rem 0",
+  },
+  requirementText: {
+    fontSize: "0.95rem",
+    color: "#92400e",
+    margin: 0,
+    lineHeight: "1.5",
   },
 };
 

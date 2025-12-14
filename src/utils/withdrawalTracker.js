@@ -18,6 +18,12 @@ export const storeWithdrawal = (account, campaignId, txHash, amount, title, bloc
     const stored = localStorage.getItem(key) || '{}';
     const withdrawals = JSON.parse(stored);
     
+    // Check if this transaction hash already exists to prevent duplicates
+    if (withdrawals[campaignId] && withdrawals[campaignId].txHash === txHash) {
+      console.log(`Transaction ${txHash} already stored for campaign ${campaignId}`);
+      return;
+    }
+    
     withdrawals[campaignId] = {
       txHash,
       amount,

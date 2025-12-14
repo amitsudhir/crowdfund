@@ -34,6 +34,9 @@ contract Crowdfund {
     /// @notice Mapping from campaign ID to donor address to contribution amount
     mapping(uint256 => mapping(address => uint256)) public contributions;
     
+    /// @notice Proof of Fund Utilization (Prototype) - IPFS hashes
+    mapping(uint256 => string[]) public usageProofs;
+    
     /// @notice Reentrancy guard
     uint256 private locked = 1;
     
@@ -154,6 +157,7 @@ contract Crowdfund {
         require(msg.sender == campaign.owner, "Only campaign owner can withdraw");
         require(!campaign.withdrawn, "Funds already withdrawn");
         require(campaign.raisedAmount >= campaign.goalAmount, "Goal not reached");
+        require(usageProofs[_campaignId].length > 0, "Must upload at least one fund utilization proof before withdrawal");
         
         campaign.withdrawn = true;
         uint256 amount = campaign.raisedAmount;
@@ -227,5 +231,27 @@ contract Crowdfund {
      */
     function getContractBalance() external view returns (uint256) {
         return address(this).balance;
+    }
+    
+    /**
+     * @notice Add usage proof (Prototype Feature)
+     * @param _campaignId Campaign ID
+     * @param _ipfsHash IPFS hash of the proof document
+     */
+    function addUsageProof(uint256 _campaignId, string memory _ipfsHash) external {
+        require(campaigns[_campaignId].exists, "Campaign does not exist");
+        require(msg.sender == campaigns[_campaignId].owner, "Only campaign owner can add proofs");
+        require(bytes(_ipfsHash).length > 0, "IPFS hash cannot be empty");
+        
+        usageProofs[_campaignId].push(_ipfsHash);
+    }
+    
+    /**
+     * @notice Get usage proofs for a campaign
+     * @param _campaignId Campaign ID
+     * @return Array of IPFS hashes
+     */
+    function getUsageProofs(uint256 _campaignId) external view returns (string[] memory) {
+        return usageProofs[_campaignId];
     }
 }
