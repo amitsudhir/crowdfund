@@ -146,7 +146,7 @@ function App() {
           </button>
         </div>
 
-        <SetupChecker />
+        <SetupChecker account={account} />
         
         {activeTab === "campaigns" && (
           <CampaignList account={account} refreshTrigger={refreshTrigger} />
