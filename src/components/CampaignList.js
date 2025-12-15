@@ -3,7 +3,6 @@ import { getReadOnlyContract } from "../config/contract";
 import CampaignCard from "./CampaignCard";
 import CampaignDetail from "./CampaignDetail";
 import SearchBar from "./SearchBar";
-import ActivityFeed from "./ActivityFeed";
 
 const CampaignList = ({ account, refreshTrigger }) => {
   const [campaigns, setCampaigns] = useState([]);
@@ -96,51 +95,44 @@ const CampaignList = ({ account, refreshTrigger }) => {
     <div style={styles.container}>
       <SearchBar searchTerm={searchTerm} onSearch={setSearchTerm} />
       
-      <div style={styles.mainContent} className="campaign-list-main-content">
-        <div style={styles.campaignsSection}>
-          <div style={styles.filters}>
-        {["ALL", "ACTIVE", "FUNDED", "EXPIRED", "MY_CAMPAIGNS"].map((f) => (
-          <button
-            key={f}
-            style={{
-              ...styles.filterBtn,
-              ...(filter === f ? styles.filterBtnActive : {}),
-            }}
-            onClick={() => setFilter(f)}
-            disabled={f === "MY_CAMPAIGNS" && !account}
-          >
-            {f === "MY_CAMPAIGNS" ? "MY CAMPAIGNS" : f}
-          </button>
-        ))}
-      </div>
-
-      {filteredCampaigns.length === 0 ? (
-        <div style={styles.empty}>
-          <div style={styles.emptyIcon}>📭</div>
-          <h3>No campaigns found</h3>
-          {filter === "MY_CAMPAIGNS" ? (
-            <p>You haven't created any campaigns yet. Click "Create Campaign" to start!</p>
-          ) : (
-            <p>Be the first to create a campaign!</p>
-          )}
-        </div>
-      ) : (
-        <div style={styles.grid}>
-          {filteredCampaigns.map((campaign) => (
-            <CampaignCard
-              key={campaign.id.toString()}
-              campaign={campaign}
-              onClick={() => setSelectedCampaign(campaign)}
-            />
+      <div style={styles.mainContent}>
+        <div style={styles.filters}>
+          {["ALL", "ACTIVE", "FUNDED", "EXPIRED", "MY_CAMPAIGNS"].map((f) => (
+            <button
+              key={f}
+              style={{
+                ...styles.filterBtn,
+                ...(filter === f ? styles.filterBtnActive : {}),
+              }}
+              onClick={() => setFilter(f)}
+              disabled={f === "MY_CAMPAIGNS" && !account}
+            >
+              {f === "MY_CAMPAIGNS" ? "MY CAMPAIGNS" : f}
+            </button>
           ))}
         </div>
-      )}
 
-        </div>
-        
-        <div style={styles.sidebar} className="campaign-list-sidebar">
-          <ActivityFeed />
-        </div>
+        {filteredCampaigns.length === 0 ? (
+          <div style={styles.empty}>
+            <div style={styles.emptyIcon}>📭</div>
+            <h3>No campaigns found</h3>
+            {filter === "MY_CAMPAIGNS" ? (
+              <p>You haven't created any campaigns yet. Click "Create Campaign" to start!</p>
+            ) : (
+              <p>Be the first to create a campaign!</p>
+            )}
+          </div>
+        ) : (
+          <div style={styles.grid}>
+            {filteredCampaigns.map((campaign) => (
+              <CampaignCard
+                key={campaign.id.toString()}
+                campaign={campaign}
+                onClick={() => setSelectedCampaign(campaign)}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {selectedCampaign && (
@@ -165,17 +157,7 @@ const styles = {
     padding: "2rem 1rem",
   },
   mainContent: {
-    display: "grid",
-    gridTemplateColumns: "1fr 350px",
-    gap: "2rem",
-    alignItems: "start",
-  },
-  campaignsSection: {
-    minWidth: 0,
-  },
-  sidebar: {
-    position: "sticky",
-    top: "100px",
+    width: "100%",
   },
   filters: {
     display: "flex",
@@ -228,21 +210,6 @@ const styles = {
   },
 };
 
-// Add media query styles
-const mediaQueryStyle = document.createElement('style');
-mediaQueryStyle.textContent = `
-  @media (max-width: 1024px) {
-    .campaign-list-main-content {
-      grid-template-columns: 1fr !important;
-    }
-    .campaign-list-sidebar {
-      position: static !important;
-    }
-  }
-`;
-if (!document.querySelector('[data-campaign-list-styles]')) {
-  mediaQueryStyle.setAttribute('data-campaign-list-styles', 'true');
-  document.head.appendChild(mediaQueryStyle);
-}
+
 
 export default CampaignList;

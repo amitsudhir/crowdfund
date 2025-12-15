@@ -183,22 +183,33 @@ function App() {
 const styles = {
   container: {
     minHeight: "calc(100vh - 80px)",
+    position: "relative",
+    zIndex: 1,
   },
   header: {
     textAlign: "center",
     padding: "3rem 1rem 2rem",
-    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-    color: "white",
+    background: "rgba(255, 255, 255, 0.1)",
+    backdropFilter: "blur(20px)",
+    border: "1px solid rgba(255, 255, 255, 0.2)",
+    borderRadius: "0 0 30px 30px",
+    color: "#2d1b69",
+    boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
   },
   mainTitle: {
     fontSize: "2.5rem",
     fontWeight: "700",
     margin: "0 0 1rem 0",
+    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent",
+    backgroundClip: "text",
   },
   subtitle: {
     fontSize: "1.25rem",
-    opacity: 0.9,
+    opacity: 0.8,
     margin: 0,
+    color: "#4c1d95",
   },
   tabs: {
     maxWidth: "1200px",
@@ -210,19 +221,23 @@ const styles = {
   },
   tab: {
     padding: "0.75rem 1.5rem",
-    border: "2px solid #e5e7eb",
-    background: "white",
+    border: "2px solid rgba(255, 255, 255, 0.3)",
+    background: "rgba(255, 255, 255, 0.2)",
+    backdropFilter: "blur(10px)",
     borderRadius: "25px",
     cursor: "pointer",
     fontWeight: "600",
     fontSize: "1rem",
-    color: "#6b7280",
-    transition: "all 0.3s",
+    color: "#4c1d95",
+    transition: "all 0.3s ease",
+    boxShadow: "0 4px 15px rgba(0, 0, 0, 0.1)",
   },
   tabActive: {
     background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
     color: "white",
     borderColor: "transparent",
+    transform: "translateY(-2px)",
+    boxShadow: "0 8px 25px rgba(102, 126, 234, 0.3)",
   },
   createBtn: {
     marginLeft: "auto",
@@ -234,6 +249,8 @@ const styles = {
     cursor: "pointer",
     fontWeight: "600",
     fontSize: "1rem",
+    boxShadow: "0 4px 15px rgba(16, 185, 129, 0.3)",
+    transition: "all 0.3s ease",
   },
 };
 

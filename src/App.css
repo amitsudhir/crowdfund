@@ -10,12 +10,53 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #f3f4f6;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
 }
 
 .App {
   min-height: 100vh;
-  background: #f3f4f6;
+  width: 100%;
+  position: relative;
+  background: 
+    radial-gradient(ellipse 85% 65% at 8% 8%, rgba(175, 109, 255, 0.42), transparent 60%),
+    radial-gradient(ellipse 75% 60% at 75% 35%, rgba(255, 235, 170, 0.55), transparent 62%),
+    radial-gradient(ellipse 70% 60% at 15% 80%, rgba(255, 100, 180, 0.40), transparent 62%),
+    radial-gradient(ellipse 70% 60% at 92% 92%, rgba(120, 190, 255, 0.45), transparent 62%),
+    linear-gradient(180deg, #f7eaff 0%, #fde2ea 100%);
+  background-attachment: fixed;
+}
+
+/* Aurora animation effect */
+.App::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(ellipse 80% 50% at 20% 30%, rgba(138, 43, 226, 0.1), transparent 50%),
+    radial-gradient(ellipse 60% 40% at 80% 70%, rgba(255, 20, 147, 0.1), transparent 50%);
+  animation: aurora 8s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes aurora {
+  0% {
+    opacity: 0.3;
+    transform: translateX(-10px) translateY(-5px) scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: translateX(10px) translateY(5px) scale(1.05);
+  }
+  100% {
+    opacity: 0.4;
+    transform: translateX(-5px) translateY(-10px) scale(0.98);
+  }
 }
 
 /* Spinner animation */
@@ -69,4 +110,72 @@ select:focus {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
+}
+/* Enhanced glassmorphism effects */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+/* Floating animation for cards */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.floating {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Gradient text effect */
+.gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Enhanced button hover effects */
+button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom selection colors */
+::selection {
+  background: rgba(102, 126, 234, 0.3);
+  color: #2d1b69;
+}
+
+::-moz-selection {
+  background: rgba(102, 126, 234, 0.3);
+  color: #2d1b69;
+}
+
+/* Enhanced focus states */
+button:focus,
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+}
+
+/* Responsive design improvements */
+@media (max-width: 768px) {
+  .App::before {
+    animation: none; /* Disable animation on mobile for performance */
+  }
 }
