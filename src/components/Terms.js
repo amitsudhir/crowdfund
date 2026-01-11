@@ -14,7 +14,7 @@ const Terms = () => {
         <div style={styles.section}>
           <h2 style={styles.sectionTitle}>1. Acceptance of Terms</h2>
           <p style={styles.text}>
-            By accessing and using Fund3, you accept and agree to be bound by the terms and provision of this agreement.
+            By accessing and using RaiseX, you accept and agree to be bound by the terms and provision of this agreement.
             This is a decentralized application (dApp) running on blockchain technology.
           </p>
         </div>
@@ -22,7 +22,7 @@ const Terms = () => {
         <div style={styles.section}>
           <h2 style={styles.sectionTitle}>2. Description of Service</h2>
           <p style={styles.text}>
-            Fund3 is a decentralized crowdfunding platform that allows users to create and support campaigns using blockchain technology.
+            RaiseX is a decentralized crowdfunding platform that allows users to create and support campaigns using blockchain technology.
             All transactions are processed through smart contracts on the Base blockchain.
           </p>
         </div>
@@ -38,7 +38,7 @@ const Terms = () => {
         <div style={styles.section}>
           <h2 style={styles.sectionTitle}>4. Disclaimer</h2>
           <p style={styles.text}>
-            Fund3 is provided "as is" without any warranties. Users interact with smart contracts at their own risk.
+            RaiseX is provided "as is" without any warranties. Users interact with smart contracts at their own risk.
             The platform does not guarantee the success of any campaign or the proper use of funds by campaign creators.
           </p>
         </div>
@@ -46,7 +46,7 @@ const Terms = () => {
         <div style={styles.section}>
           <h2 style={styles.sectionTitle}>5. Limitation of Liability</h2>
           <p style={styles.text}>
-            The Fund3 platform and its developers shall not be liable for any direct, indirect, incidental, special,
+            The RaiseX platform and its developers shall not be liable for any direct, indirect, incidental, special,
             consequential, or punitive damages resulting from your use of the service.
           </p>
         </div>
@@ -55,7 +55,7 @@ const Terms = () => {
           <h3 style={styles.placeholderTitle}>Content Coming Soon</h3>
           <p style={styles.placeholderText}>
             Detailed terms and conditions will be added here. This is a placeholder for the full legal document
-            that will cover all aspects of using the Fund3 platform.
+            that will cover all aspects of using the RaiseX platform.
           </p>
         </div>
       </div>

@@ -219,6 +219,7 @@ const MyCampaigns = ({ account }) => {
 const CampaignCard = ({ campaign, onWithdraw, withdrawing, onClick }) => {
   const [proofCount, setProofCount] = useState(0);
   const [contract, setContract] = useState(null);
+  const [isHovered, setIsHovered] = useState(false);
   
   useEffect(() => {
     const loadProofCount = async () => {
@@ -251,7 +252,17 @@ const CampaignCard = ({ campaign, onWithdraw, withdrawing, onClick }) => {
   };
 
   return (
-    <div style={styles.card} onClick={handleCardClick}>
+    <div 
+      style={{
+        ...styles.card,
+        transform: isHovered ? "translateY(-5px)" : "translateY(0)",
+        boxShadow: isHovered ? "0 8px 25px rgba(0,0,0,0.15)" : "0 4px 15px rgba(0,0,0,0.1)",
+      }}
+      onClick={handleCardClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* Image Section - Fixed Height */}
       <div style={styles.cardImage}>
         <img
           src={campaign.imageURI || "/fund.jpg"}
@@ -264,15 +275,18 @@ const CampaignCard = ({ campaign, onWithdraw, withdrawing, onClick }) => {
         </div>
       </div>
 
+      {/* Content Section - Fixed Height with Proper Layout */}
       <div style={styles.cardContent}>
+        {/* Header - Fixed Height */}
         <div style={styles.cardHeader}>
           <h3 style={styles.cardTitle}>{campaign.title}</h3>
           <div style={styles.category}>{campaign.category}</div>
         </div>
         
+        {/* Description - Fixed Height with Truncation */}
         <p style={styles.cardDescription}>{campaign.description}</p>
 
-        {/* Creation Date Section */}
+        {/* Creation Date - Fixed Height */}
         <div style={styles.creationDate}>
           <span style={styles.creationLabel}>Created:</span>
           <span style={styles.creationValue}>
@@ -280,15 +294,14 @@ const CampaignCard = ({ campaign, onWithdraw, withdrawing, onClick }) => {
               ? campaign.createdAt.toLocaleDateString('en-US', {
                   year: 'numeric',
                   month: 'short',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
+                  day: 'numeric'
                 })
               : `Campaign #${campaign.id}`
             }
           </span>
         </div>
 
+        {/* Progress Section - Fixed Height */}
         <div style={styles.progressSection}>
           <div style={styles.progressBar}>
             <div style={{ ...styles.progressFill, width: `${Math.min(progress, 100)}%` }} />
@@ -296,15 +309,16 @@ const CampaignCard = ({ campaign, onWithdraw, withdrawing, onClick }) => {
           <div style={styles.progressText}>{progress.toFixed(1)}% funded</div>
         </div>
 
+        {/* Amounts Section - Fixed Height */}
         <div style={styles.amounts}>
-          <div>
+          <div style={styles.amountColumn}>
             <div style={styles.amountLabel}>Raised</div>
             <div style={styles.amountValue}>
               {CURRENCY.symbol}{ethToInr(campaign.raisedAmount)}
             </div>
             <div style={styles.ethValue}>{campaign.raisedAmount} ETH</div>
           </div>
-          <div>
+          <div style={styles.amountColumn}>
             <div style={styles.amountLabel}>Goal</div>
             <div style={styles.amountValue}>
               {CURRENCY.symbol}{ethToInr(campaign.goalAmount)}
@@ -313,6 +327,7 @@ const CampaignCard = ({ campaign, onWithdraw, withdrawing, onClick }) => {
           </div>
         </div>
 
+        {/* Info Section - Fixed Height */}
         <div style={styles.info}>
           <div style={styles.infoItem}>
             <span>{campaign.donorsCount} donors</span>
@@ -326,7 +341,7 @@ const CampaignCard = ({ campaign, onWithdraw, withdrawing, onClick }) => {
           </div>
         </div>
 
-        {/* Action Section - Always at bottom */}
+        {/* Action Section - Always at Bottom with Fixed Height */}
         <div style={styles.actionSection}>
           {needsProof && (
             <div style={styles.proofRequired}>
@@ -421,13 +436,12 @@ const styles = {
     background: "white",
     borderRadius: "15px",
     overflow: "hidden",
-    boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
     border: "2px solid #e5e7eb",
-    transition: "transform 0.3s, box-shadow 0.3s",
+    transition: "transform 0.3s ease, box-shadow 0.3s ease",
     cursor: "pointer",
     display: "flex",
     flexDirection: "column",
-    height: "580px", // INCREASED HEIGHT for better spacing
+    height: "600px", // Consistent height for all cards
     width: "100%",
   },
   cardImage: {
@@ -458,7 +472,8 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     flex: 1,
-    height: "400px", // INCREASED content height
+    height: "420px", // Adjusted content height
+    overflow: "hidden", // Prevent content overflow
   },
   cardHeader: {
     display: "flex",
@@ -496,10 +511,10 @@ const styles = {
     color: "#6b7280",
     lineHeight: "1.4",
     display: "-webkit-box",
-    WebkitLineClamp: 3, // INCREASED to 3 lines
+    WebkitLineClamp: 2, // Reduced to 2 lines for better spacing
     WebkitBoxOrient: "vertical",
     overflow: "hidden",
-    height: "3.6em", // INCREASED description height
+    height: "2.8em", // Adjusted description height
     marginBottom: "1rem",
   },
   creationDate: {
@@ -590,66 +605,72 @@ const styles = {
   // Action section - FIXED at bottom with better height
   actionSection: {
     marginTop: "auto", // Pushes to bottom
-    minHeight: "60px", // INCREASED action section height
+    minHeight: "60px", // Increased action section height for better alignment
     display: "flex",
     flexDirection: "column",
     justifyContent: "flex-end",
   },
   withdrawBtn: {
     width: "100%",
-    padding: "1rem",
+    padding: "0.875rem",
     background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
     color: "white",
     border: "none",
     borderRadius: "8px",
-    fontSize: "0.95rem",
+    fontSize: "0.9rem",
     fontWeight: "600",
     cursor: "pointer",
     transition: "transform 0.2s, box-shadow 0.2s",
-    minHeight: "45px",
+    minHeight: "44px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
   withdrawnNote: {
-    padding: "1rem",
+    padding: "0.875rem",
     background: "#d1fae5",
     color: "#065f46",
     borderRadius: "8px",
     textAlign: "center",
     fontWeight: "600",
-    fontSize: "0.9rem",
-    minHeight: "45px",
+    fontSize: "0.85rem",
+    minHeight: "44px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    border: "1px solid #a7f3d0",
   },
   failedNote: {
-    padding: "1rem",
+    padding: "0.875rem",
     background: "#fef3c7",
     color: "#92400e",
     borderRadius: "8px",
     textAlign: "center",
     fontWeight: "600",
-    fontSize: "0.9rem",
-    minHeight: "45px",
+    fontSize: "0.85rem",
+    minHeight: "44px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    border: "1px solid #fcd34d",
   },
   proofRequired: {
     display: "flex",
-    alignItems: "flex-start",
-    gap: "0.75rem",
-    padding: "1rem",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "0.875rem",
     background: "#fef3c7",
-    border: "2px solid #f59e0b",
+    border: "1px solid #f59e0b",
     borderRadius: "8px",
-    marginBottom: "0.75rem",
-    minHeight: "50px", // INCREASED proof message height
+    marginBottom: "0",
+    minHeight: "44px",
   },
   proofText: {
-    fontSize: "0.85rem",
+    fontSize: "0.8rem",
     color: "#92400e",
-    lineHeight: "1.4",
+    lineHeight: "1.3",
     fontWeight: "600",
+    textAlign: "center",
   },
   loading: {
     textAlign: "center",

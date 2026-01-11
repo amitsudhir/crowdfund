@@ -14,7 +14,7 @@ const Privacy = () => {
         <div style={styles.section}>
           <h2 style={styles.sectionTitle}>1. Information We Collect</h2>
           <p style={styles.text}>
-            Fund3 is a decentralized application. We do not collect personal information in the traditional sense.
+            RaiseX is a decentralized application. We do not collect personal information in the traditional sense.
             All data is stored on the blockchain and is publicly accessible. This includes wallet addresses,
             campaign information, and transaction history.
           </p>
@@ -39,7 +39,7 @@ const Privacy = () => {
         <div style={styles.section}>
           <h2 style={styles.sectionTitle}>4. Third-Party Services</h2>
           <p style={styles.text}>
-            Fund3 integrates with MetaMask and other Web3 wallets for blockchain interactions.
+            RaiseX integrates with MetaMask and other Web3 wallets for blockchain interactions.
             Please review their respective privacy policies for information about how they handle your data.
           </p>
         </div>
@@ -56,7 +56,7 @@ const Privacy = () => {
           <h3 style={styles.placeholderTitle}>Content Coming Soon</h3>
           <p style={styles.placeholderText}>
             Detailed privacy policy will be added here. This is a placeholder for the full privacy document
-            that will cover all aspects of data handling in the Fund3 platform.
+            that will cover all aspects of data handling in the RaiseX platform.
           </p>
         </div>
       </div>

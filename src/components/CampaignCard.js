@@ -5,6 +5,7 @@ import { CURRENCY, ethToInr } from "../config/config";
 const CampaignCard = ({ campaign, onClick }) => {
   const [timeLeft, setTimeLeft] = useState("");
   const [status, setStatus] = useState("ACTIVE");
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     const updateTimeLeft = () => {
@@ -63,7 +64,16 @@ const CampaignCard = ({ campaign, onClick }) => {
   };
 
   return (
-    <div style={styles.card} onClick={handleCardClick}>
+    <div 
+      style={{
+        ...styles.card,
+        transform: isHovered ? "translateY(-5px)" : "translateY(0)",
+        boxShadow: isHovered ? "0 8px 25px rgba(0,0,0,0.15)" : "0 4px 15px rgba(0,0,0,0.1)",
+      }}
+      onClick={handleCardClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <div style={styles.imageContainer}>
         {campaign.imageURI ? (
           <img
@@ -121,6 +131,11 @@ const CampaignCard = ({ campaign, onClick }) => {
           <div style={styles.infoItem}>
             <span>{timeLeft}</span>
           </div>
+          <div style={styles.statusBadge}>
+            <span style={{ ...styles.statusText, color: getStatusColor() }}>
+              {status}
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -132,18 +147,18 @@ const styles = {
     background: "white",
     borderRadius: "15px",
     overflow: "hidden",
-    boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+    border: "2px solid #e5e7eb",
     cursor: "pointer",
-    transition: "transform 0.3s, box-shadow 0.3s",
+    transition: "transform 0.3s ease, box-shadow 0.3s ease",
     display: "flex",
     flexDirection: "column",
-    height: "580px", // SAME HEIGHT as MyCampaigns cards
+    height: "600px", // Consistent height with MyCampaigns cards
     width: "100%",
   },
   imageContainer: {
     position: "relative",
     width: "100%",
-    height: "180px", // SAME HEIGHT as MyCampaigns cards
+    height: "180px", // Fixed image height
     overflow: "hidden",
     flexShrink: 0,
   },
@@ -178,7 +193,7 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     flex: 1,
-    height: "400px", // SAME HEIGHT as MyCampaigns cards
+    height: "420px", // Consistent content height
   },
   cardHeader: {
     display: "flex",
@@ -186,7 +201,7 @@ const styles = {
     alignItems: "flex-start",
     gap: "0.75rem",
     marginBottom: "1rem",
-    minHeight: "50px", // SAME HEIGHT as MyCampaigns cards
+    minHeight: "50px", // Fixed header height
   },
   category: {
     background: "#f3f4f6",
@@ -209,7 +224,7 @@ const styles = {
     WebkitLineClamp: 2,
     WebkitBoxOrient: "vertical",
     overflow: "hidden",
-    maxHeight: "2.6em", // SAME HEIGHT as MyCampaigns cards
+    maxHeight: "2.6em", // Fixed title height
   },
   description: {
     color: "#6b7280",
@@ -217,18 +232,18 @@ const styles = {
     lineHeight: "1.4",
     marginBottom: "1rem",
     display: "-webkit-box",
-    WebkitLineClamp: 3, // SAME as MyCampaigns cards
+    WebkitLineClamp: 2, // Consistent with MyCampaigns
     WebkitBoxOrient: "vertical",
     overflow: "hidden",
-    height: "3.6em", // SAME HEIGHT as MyCampaigns cards
+    height: "2.8em", // Consistent description height
   },
   progressContainer: {
     marginBottom: "1rem",
-    height: "40px", // SAME HEIGHT as MyCampaigns cards
+    height: "40px", // Fixed progress container height
   },
   progressBar: {
     width: "100%",
-    height: "8px", // SAME HEIGHT as MyCampaigns cards
+    height: "8px", // Fixed progress bar height
     background: "#e5e7eb",
     borderRadius: "10px",
     overflow: "hidden",
@@ -254,7 +269,7 @@ const styles = {
     background: "#f9fafb",
     borderRadius: "8px",
     border: "1px solid #f1f5f9",
-    minHeight: "80px", // SAME HEIGHT as MyCampaigns cards
+    minHeight: "80px", // Fixed stats height
   },
   stat: {
     display: "flex",
@@ -280,12 +295,26 @@ const styles = {
     color: "#6b7280",
     fontWeight: "500",
     marginTop: "auto", // Pushes to bottom
-    minHeight: "25px", // SAME HEIGHT as MyCampaigns cards
+    minHeight: "50px", // Consistent footer height
+    padding: "0.75rem 0",
+    borderTop: "1px solid #f1f5f9",
   },
   infoItem: {
     display: "flex",
     alignItems: "center",
     gap: "0.5rem",
+  },
+  statusBadge: {
+    display: "flex",
+    alignItems: "center",
+  },
+  statusText: {
+    fontSize: "0.8rem",
+    fontWeight: "600",
+    padding: "0.25rem 0.75rem",
+    borderRadius: "12px",
+    background: "rgba(255,255,255,0.8)",
+    border: "1px solid currentColor",
   },
 };
 
