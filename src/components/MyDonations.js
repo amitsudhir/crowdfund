@@ -66,8 +66,8 @@ const MyDonations = ({ account }) => {
     return (
       <div style={styles.container}>
         <div style={styles.empty}>
-          <h3>Connect Your Wallet</h3>
-          <p>Connect your wallet to see your donation history</p>
+          <h3>Wallet Connection Required</h3>
+          <p>Please connect your wallet to view your donation history</p>
         </div>
       </div>
     );

@@ -13,9 +13,6 @@ const SetupChecker = ({ account }) => {
         <p style={styles.subtitle}>
           Please connect your wallet to start using RaiseX
         </p>
-        <p style={styles.helpText}>
-          Need help? Check our <strong>README.md</strong> for setup instructions
-        </p>
       </div>
     </div>
   );

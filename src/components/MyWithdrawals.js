@@ -171,7 +171,7 @@ const MyWithdrawals = ({ account }) => {
     return (
       <div style={styles.container}>
         <div style={styles.empty}>
-          <h3>Connect Your Wallet</h3>
+          <h3>Wallet Connection Required</h3>
           <p>Please connect your wallet to view your withdrawal history</p>
         </div>
       </div>

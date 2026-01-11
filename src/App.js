@@ -10,7 +10,6 @@ import Analytics from "./components/Analytics";
 import MyDonations from "./components/MyDonations";
 import MyWithdrawals from "./components/MyWithdrawals";
 import MyCampaigns from "./components/MyCampaigns";
-import SetupChecker from "./components/SetupChecker";
 import CampaignDetail from "./components/CampaignDetail";
 import FAQ from "./components/FAQ";
 import Terms from "./components/Terms";
@@ -168,8 +167,6 @@ const HomePage = ({ account, refreshTrigger }) => {
           RaiseX — Trust, Raised on Chain
         </p>
       </div>
-
-      <SetupChecker account={account} />
       
       <CampaignList account={account} refreshTrigger={refreshTrigger} showHeader={false} />
     </div>

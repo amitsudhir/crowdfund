@@ -128,8 +128,8 @@ const MyCampaigns = ({ account }) => {
     return (
       <div style={styles.container}>
         <div style={styles.empty}>
-          <h3>Connect Your Wallet</h3>
-          <p>Please connect your wallet to view your campaigns</p>
+          <h3>Wallet Connection Required</h3>
+          <p>Please connect your wallet to view and manage your campaigns</p>
         </div>
       </div>
     );
