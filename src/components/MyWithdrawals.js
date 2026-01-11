@@ -171,7 +171,6 @@ const MyWithdrawals = ({ account }) => {
     return (
       <div style={styles.container}>
         <div style={styles.empty}>
-          <div style={styles.emptyIcon}>🔐</div>
           <h3>Connect Your Wallet</h3>
           <p>Please connect your wallet to view your withdrawal history</p>
         </div>
@@ -198,7 +197,7 @@ const MyWithdrawals = ({ account }) => {
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h2 style={styles.title}>💰 My Withdrawals</h2>
+        <h2 style={styles.title}>My Withdrawals</h2>
         <div style={styles.totalBox}>
           <div style={styles.totalLabel}>Total Withdrawn</div>
           <div style={styles.totalAmount}>
@@ -210,7 +209,6 @@ const MyWithdrawals = ({ account }) => {
 
       {withdrawals.length === 0 ? (
         <div style={styles.empty}>
-          <div style={styles.emptyIcon}>📭</div>
           <h3>No Withdrawals Yet</h3>
           <p>
             When your campaigns reach their goals, you can withdraw the funds here.
@@ -229,7 +227,7 @@ const MyWithdrawals = ({ account }) => {
                     Campaign #{withdrawal.campaignId}
                   </div>
                 </div>
-                <div style={styles.badge}>✅ Withdrawn</div>
+                <div style={styles.badge}>Withdrawn</div>
               </div>
 
               <div style={styles.cardBody}>
@@ -263,7 +261,7 @@ const MyWithdrawals = ({ account }) => {
                         rel="noopener noreferrer"
                         style={styles.viewTxButton}
                       >
-                        🔗 View Transaction on BaseScan
+                        View Transaction on BaseScan
                       </a>
                       <div style={styles.txHashSection}>
                         <div style={styles.txHashLabel}>Transaction Hash</div>
@@ -281,7 +279,7 @@ const MyWithdrawals = ({ account }) => {
                           rel="noopener noreferrer"
                           style={styles.fallbackButton}
                         >
-                          📋 View Your Transactions
+                          View Your Transactions
                         </a>
                         <a
                           href={`https://sepolia.basescan.org/address/${CONTRACT_ADDRESS}#events`}
@@ -289,7 +287,7 @@ const MyWithdrawals = ({ account }) => {
                           rel="noopener noreferrer"
                           style={styles.fallbackButton}
                         >
-                          📊 View Contract Events
+                          View Contract Events
                         </a>
                       </div>
                     </div>
@@ -516,10 +514,6 @@ const styles = {
     textAlign: "center",
     padding: "4rem 1rem",
     color: "#6b7280",
-  },
-  emptyIcon: {
-    fontSize: "4rem",
-    marginBottom: "1rem",
   },
 };
 

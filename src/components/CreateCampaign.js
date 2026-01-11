@@ -3,8 +3,9 @@ import { ethers } from "ethers";
 import { toast } from "react-toastify";
 import { getContract } from "../config/contract";
 import { CATEGORIES, CURRENCY, inrToEth } from "../config/config";
+import { notifyTransactionSubmitted, notifyTransactionConfirmed, notifyTransactionFailed } from "../utils/notifications";
 
-const CreateCampaign = ({ onSuccess, onClose }) => {
+const CreateCampaign = ({ onSuccess, onClose, standalone = false }) => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -107,6 +108,13 @@ const CreateCampaign = ({ onSuccess, onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate image is uploaded
+    if (!formData.imageURI) {
+      toast.error("Campaign image is required! Please upload an image.");
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -128,30 +136,39 @@ const CreateCampaign = ({ onSuccess, onClose }) => {
         formData.creatorInfo
       );
 
-      toast.info("Transaction submitted. Waiting for confirmation...");
-      await tx.wait();
-      toast.success("Campaign created successfully! 🎉");
-      onSuccess();
+      // Show transaction submitted notification
+      await notifyTransactionSubmitted(tx.hash);
+      
+      // Wait for confirmation
+      const receipt = await tx.wait();
+      
+      // Only show success after confirmation
+      if (receipt.status === 1) {
+        await notifyTransactionConfirmed('campaign', {
+          body: `Campaign "${formData.title}" has been created successfully!`
+        });
+        onSuccess();
+      } else {
+        await notifyTransactionFailed("Transaction failed", "campaign");
+      }
     } catch (error) {
       console.error(error);
-      if (error.message.includes('User rejected')) {
-        toast.error("Transaction cancelled by user");
-      } else {
-        toast.error("Failed to create campaign: " + error.message);
-      }
+      await notifyTransactionFailed(error.message, "campaign");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={styles.overlay}>
-      <div style={styles.modal}>
+    <div style={standalone ? styles.standalonePage : styles.overlay}>
+      <div style={standalone ? styles.standaloneModal : styles.modal}>
         <div style={styles.header}>
           <h2 style={styles.title}>Create New Campaign</h2>
-          <button style={styles.closeBtn} onClick={onClose}>
-            ✕
-          </button>
+          {!standalone && (
+            <button style={styles.closeBtn} onClick={onClose}>
+              X
+            </button>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} style={styles.form}>
@@ -232,10 +249,13 @@ const CreateCampaign = ({ onSuccess, onClose }) => {
           </div>
 
           <div style={styles.formGroup}>
-            <label style={styles.label}>Campaign Banner Image</label>
+            <label style={styles.label}>Campaign Banner Image *</label>
+            <div style={styles.requiredNote}>
+              A campaign image is required to create your campaign
+            </div>
             
             {/* Image Upload Section */}
-            <div style={styles.imageUploadSection}>
+            <div style={formData.imageURI ? styles.imageUploadSectionSuccess : styles.imageUploadSection}>
               <div style={styles.uploadOptions}>
                 <div style={styles.uploadOption}>
                   <input
@@ -244,21 +264,22 @@ const CreateCampaign = ({ onSuccess, onClose }) => {
                     accept=".jpg,.jpeg,.png"
                     onChange={handleImageSelect}
                     style={styles.hiddenInput}
+                    required
                   />
                   <label htmlFor="campaign-image-input" style={styles.uploadLabel}>
-                    📷 Choose Image (JPG, PNG)
+                    Choose Image (JPG, PNG) *
                   </label>
                   
                   {selectedImage && (
                     <div style={styles.selectedImageInfo}>
-                      <span style={styles.imageName}>📄 {selectedImage.name}</span>
+                      <span style={styles.imageName}>{selectedImage.name}</span>
                       <button
                         type="button"
                         onClick={handleImageUpload}
                         disabled={uploadingImage}
                         style={styles.uploadBtn}
                       >
-                        {uploadingImage ? '⏳ Uploading...' : '📤 Upload to IPFS'}
+                        {uploadingImage ? 'Uploading...' : 'Upload to IPFS'}
                       </button>
                     </div>
                   )}
@@ -274,6 +295,7 @@ const CreateCampaign = ({ onSuccess, onClose }) => {
                     onChange={handleChange}
                     style={styles.input}
                     placeholder="Paste image URL here"
+                    required
                   />
                 </div>
               </div>
@@ -281,14 +303,29 @@ const CreateCampaign = ({ onSuccess, onClose }) => {
               {/* Image Preview */}
               {formData.imageURI && (
                 <div style={styles.imagePreview}>
+                  <div style={styles.imagePreviewHeader}>
+                    <span style={styles.imagePreviewLabel}>Campaign Image Preview:</span>
+                    <span style={styles.imageSuccess}>Image Ready</span>
+                  </div>
                   <img 
                     src={formData.imageURI} 
                     alt="Campaign preview" 
                     style={styles.previewImage}
                     onError={(e) => {
                       e.target.style.display = 'none';
+                      toast.error('Invalid image URL. Please upload a valid image.');
+                      setFormData({...formData, imageURI: ''});
                     }}
                   />
+                </div>
+              )}
+              
+              {!formData.imageURI && (
+                <div style={styles.imageRequired}>
+                  <span style={styles.imageRequiredIcon}>!</span>
+                  <span style={styles.imageRequiredText}>
+                    Please upload an image or provide a valid image URL to continue
+                  </span>
                 </div>
               )}
             </div>
@@ -307,16 +344,18 @@ const CreateCampaign = ({ onSuccess, onClose }) => {
           </div>
 
           <div style={styles.actions}>
-            <button
-              type="button"
-              onClick={onClose}
-              style={styles.cancelBtn}
-              disabled={loading}
-            >
-              Cancel
-            </button>
-            <button type="submit" style={styles.submitBtn} disabled={loading}>
-              {loading ? "Creating..." : "Create Campaign"}
+            {!standalone && (
+              <button
+                type="button"
+                onClick={onClose}
+                style={styles.cancelBtn}
+                disabled={loading}
+              >
+                Cancel
+              </button>
+            )}
+            <button type="submit" style={formData.imageURI ? styles.submitBtn : styles.submitBtnDisabled} disabled={loading || !formData.imageURI}>
+              {loading ? "Creating..." : !formData.imageURI ? "Upload Image First" : "Create Campaign"}
             </button>
           </div>
         </form>
@@ -339,6 +378,11 @@ const styles = {
     zIndex: 2000,
     padding: "1rem",
   },
+  standalonePage: {
+    minHeight: "100vh",
+    background: "#f9fafb",
+    padding: "2rem 0",
+  },
   modal: {
     background: "white",
     borderRadius: "20px",
@@ -347,6 +391,14 @@ const styles = {
     maxHeight: "90vh",
     overflow: "auto",
     boxShadow: "0 10px 40px rgba(0,0,0,0.3)",
+  },
+  standaloneModal: {
+    background: "white",
+    borderRadius: "20px",
+    maxWidth: "700px",
+    width: "100%",
+    margin: "0 auto",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
   },
   header: {
     display: "flex",
@@ -425,11 +477,34 @@ const styles = {
     fontWeight: "600",
     cursor: "pointer",
   },
+  submitBtnDisabled: {
+    flex: 1,
+    padding: "0.75rem",
+    border: "none",
+    background: "#d1d5db",
+    color: "#9ca3af",
+    borderRadius: "10px",
+    fontSize: "1rem",
+    fontWeight: "600",
+    cursor: "not-allowed",
+  },
   imageUploadSection: {
     border: "2px dashed #e0e0e0",
     borderRadius: "10px",
     padding: "1rem",
     background: "#fafafa",
+  },
+  imageUploadSectionSuccess: {
+    border: "2px dashed #10b981",
+    borderRadius: "10px",
+    padding: "1rem",
+    background: "#f0fdf4",
+  },
+  requiredNote: {
+    fontSize: "0.85rem",
+    color: "#ef4444",
+    marginBottom: "0.5rem",
+    fontWeight: "500",
   },
   uploadOptions: {
     display: "flex",
@@ -493,13 +568,48 @@ const styles = {
   },
   imagePreview: {
     marginTop: "1rem",
-    textAlign: "center",
+  },
+  imagePreviewHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "0.5rem",
+  },
+  imagePreviewLabel: {
+    fontSize: "0.9rem",
+    fontWeight: "600",
+    color: "#374151",
+  },
+  imageSuccess: {
+    fontSize: "0.85rem",
+    fontWeight: "600",
+    color: "#10b981",
   },
   previewImage: {
     maxWidth: "100%",
     maxHeight: "200px",
     borderRadius: "8px",
     boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+  },
+  imageRequired: {
+    display: "flex",
+    alignItems: "center",
+    gap: "0.5rem",
+    padding: "1rem",
+    background: "#fef3c7",
+    border: "1px solid #f59e0b",
+    borderRadius: "8px",
+    marginTop: "1rem",
+  },
+  imageRequiredIcon: {
+    fontSize: "1.2rem",
+    color: "#f59e0b",
+    fontWeight: "bold",
+  },
+  imageRequiredText: {
+    fontSize: "0.9rem",
+    color: "#92400e",
+    fontWeight: "500",
   },
 };
 

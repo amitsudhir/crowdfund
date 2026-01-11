@@ -76,29 +76,25 @@ const Analytics = () => {
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.title}>📊 Platform Analytics</h2>
+      <h2 style={styles.title}>Platform Analytics</h2>
 
       <div style={styles.statsGrid}>
         <div style={styles.statCard}>
-          <div style={styles.statIcon}>🎯</div>
           <div style={styles.statValue}>{stats.totalCampaigns}</div>
           <div style={styles.statLabel}>Total Campaigns</div>
         </div>
 
         <div style={styles.statCard}>
-          <div style={styles.statIcon}>💰</div>
           <div style={styles.statValue}>{CURRENCY.symbol}{ethToInr(stats.totalRaised)}</div>
           <div style={styles.statLabel}>Total Raised ({parseFloat(stats.totalRaised).toFixed(4)} ETH)</div>
         </div>
 
         <div style={styles.statCard}>
-          <div style={styles.statIcon}>🔥</div>
           <div style={styles.statValue}>{stats.activeCampaigns}</div>
           <div style={styles.statLabel}>Active Campaigns</div>
         </div>
 
         <div style={styles.statCard}>
-          <div style={styles.statIcon}>⏰</div>
           <div style={styles.statValue}>{stats.expiredCampaigns}</div>
           <div style={styles.statLabel}>Expired Campaigns</div>
         </div>
@@ -106,7 +102,7 @@ const Analytics = () => {
 
       {stats.topCampaigns.length > 0 && (
         <div style={styles.topSection}>
-          <h3 style={styles.sectionTitle}>🏆 Top Funded Campaigns</h3>
+          <h3 style={styles.sectionTitle}>Top Funded Campaigns</h3>
           <div style={styles.topList}>
             {stats.topCampaigns.map((campaign, index) => (
               <div key={campaign.id.toString()} style={styles.topItem}>
@@ -153,10 +149,6 @@ const styles = {
     boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
     textAlign: "center",
     transition: "transform 0.3s",
-  },
-  statIcon: {
-    fontSize: "3rem",
-    marginBottom: "1rem",
   },
   statValue: {
     fontSize: "2rem",

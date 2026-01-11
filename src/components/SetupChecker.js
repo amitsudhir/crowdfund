@@ -9,10 +9,9 @@ const SetupChecker = ({ account }) => {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <div style={styles.walletIcon}>🔗</div>
         <h3 style={styles.title}>Connect Your Wallet</h3>
         <p style={styles.subtitle}>
-          Please connect your wallet to start using CrowdFund Platform
+          Please connect your wallet to start using RaiseX
         </p>
         <p style={styles.helpText}>
           Need help? Check our <strong>README.md</strong> for setup instructions
@@ -36,10 +35,6 @@ const styles = {
     padding: "3rem 2rem",
     textAlign: "center",
     boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
-  },
-  walletIcon: {
-    fontSize: "4rem",
-    marginBottom: "1.5rem",
   },
   title: {
     fontSize: "2rem",

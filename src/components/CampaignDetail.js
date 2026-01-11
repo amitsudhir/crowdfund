@@ -5,10 +5,11 @@ import { getContract } from "../config/contract";
 import { CURRENCY, ethToInr, inrToEth } from "../config/config";
 import { storeWithdrawal } from "../utils/withdrawalTracker";
 import { storeDonation } from "../utils/donationTracker";
+import { notifyTransactionSubmitted, notifyTransactionConfirmed, notifyTransactionFailed } from "../utils/notifications";
 import ProofUpload from "./ProofUpload";
 import ProofViewer from "./ProofViewer";
 
-const CampaignDetail = ({ campaign, account, onClose, onSuccess }) => {
+const CampaignDetail = ({ campaign, account, onClose, onSuccess, standalone = false }) => {
   const [donateAmount, setDonateAmount] = useState("");
   const [loading, setLoading] = useState(false);
   const [myContribution, setMyContribution] = useState("0");
@@ -42,6 +43,15 @@ const CampaignDetail = ({ campaign, account, onClose, onSuccess }) => {
     };
     loadContract();
   }, [campaign?.id]);
+
+  const copyShareLink = () => {
+    const campaignUrl = `${window.location.origin}/campaign/${campaign.id.toString()}`;
+    navigator.clipboard.writeText(campaignUrl).then(() => {
+      toast.success("Campaign link copied to clipboard!");
+    }).catch(() => {
+      toast.error("Failed to copy link");
+    });
+  };
 
   const loadMyContribution = async () => {
     if (!account) return;
@@ -97,40 +107,50 @@ const CampaignDetail = ({ campaign, account, onClose, onSuccess }) => {
     setLoading(true);
     try {
       const { contract, provider } = await getContract();
+      
+      // Show initial confirmation request
       toast.info("Please confirm donation in MetaMask...");
+      
       const tx = await contract.donate(campaign.id, {
         value: ethers.parseEther(donateAmount),
       });
-      toast.info("Transaction submitted. Waiting for confirmation...");
+      
+      // Show transaction submitted notification
+      await notifyTransactionSubmitted(tx.hash);
+      
+      // Wait for confirmation
       const receipt = await tx.wait();
       
-      // Store donation data for future reference
-      if (receipt.hash) {
-        // Get block details for timestamp
-        const block = await provider.getBlock(receipt.blockNumber);
-        const timestamp = block ? block.timestamp * 1000 : Date.now();
+      // Only show success after confirmation
+      if (receipt.status === 1) {
+        // Store donation data for future reference
+        if (receipt.hash) {
+          // Get block details for timestamp
+          const block = await provider.getBlock(receipt.blockNumber);
+          const timestamp = block ? block.timestamp * 1000 : Date.now();
+          
+          storeDonation(
+            account,
+            campaign.id.toString(),
+            receipt.hash,
+            donateAmount,
+            campaign.title,
+            receipt.blockNumber,
+            timestamp
+          );
+        }
         
-        storeDonation(
-          account,
-          campaign.id.toString(),
-          receipt.hash,
-          donateAmount,
-          campaign.title,
-          receipt.blockNumber,
-          timestamp
-        );
+        await notifyTransactionConfirmed('donation', {
+          body: `Successfully donated ${donateAmount} ETH to ${campaign.title}`
+        });
+        setDonateAmount("");
+        onSuccess();
+      } else {
+        await notifyTransactionFailed("Transaction failed", "donation");
       }
-      
-      toast.success("Donation successful! 🎉");
-      setDonateAmount("");
-      onSuccess();
     } catch (error) {
       console.error(error);
-      if (error.message.includes('User rejected')) {
-        toast.error("Transaction cancelled by user");
-      } else {
-        toast.error("Donation failed: " + error.message);
-      }
+      await notifyTransactionFailed(error.message, "donation");
     } finally {
       setLoading(false);
     }
@@ -142,38 +162,48 @@ const CampaignDetail = ({ campaign, account, onClose, onSuccess }) => {
     setLoading(true);
     try {
       const { contract } = await getContract();
+      
+      // Show initial confirmation request
       toast.info("Please confirm withdrawal in MetaMask...");
+      
       const tx = await contract.withdraw(campaign.id);
-      toast.info("Transaction submitted. Waiting for confirmation...");
+      
+      // Show transaction submitted notification
+      await notifyTransactionSubmitted(tx.hash);
+      
+      // Wait for confirmation
       const receipt = await tx.wait();
       
-      // Store withdrawal data for future reference
-      if (receipt.hash) {
-        // Get block details for timestamp
-        const { provider } = await getContract();
-        const block = await provider.getBlock(receipt.blockNumber);
-        const timestamp = block ? block.timestamp * 1000 : Date.now();
+      // Only show success after confirmation
+      if (receipt.status === 1) {
+        // Store withdrawal data for future reference
+        if (receipt.hash) {
+          // Get block details for timestamp
+          const { provider } = await getContract();
+          const block = await provider.getBlock(receipt.blockNumber);
+          const timestamp = block ? block.timestamp * 1000 : Date.now();
+          
+          storeWithdrawal(
+            account,
+            campaign.id.toString(), 
+            receipt.hash, 
+            ethers.formatEther(campaign.raisedAmount), 
+            campaign.title,
+            receipt.blockNumber,
+            timestamp
+          );
+        }
         
-        storeWithdrawal(
-          account,
-          campaign.id.toString(), 
-          receipt.hash, 
-          ethers.formatEther(campaign.raisedAmount), 
-          campaign.title,
-          receipt.blockNumber,
-          timestamp
-        );
+        await notifyTransactionConfirmed('withdrawal', {
+          body: `Successfully withdrew ${ethers.formatEther(campaign.raisedAmount)} ETH from ${campaign.title}`
+        });
+        onSuccess();
+      } else {
+        await notifyTransactionFailed("Transaction failed", "withdrawal");
       }
-      
-      toast.success("Withdrawal successful! 💰");
-      onSuccess();
     } catch (error) {
       console.error(error);
-      if (error.message.includes('User rejected')) {
-        toast.error("Transaction cancelled by user");
-      } else {
-        toast.error("Withdrawal failed: " + error.message);
-      }
+      await notifyTransactionFailed(error.message, "withdrawal");
     } finally {
       setLoading(false);
     }
@@ -183,14 +213,30 @@ const CampaignDetail = ({ campaign, account, onClose, onSuccess }) => {
     setLoading(true);
     try {
       const { contract } = await getContract();
-      toast.info("Processing refund...");
+      
+      // Show initial confirmation request
+      toast.info("Please confirm refund claim in MetaMask...");
+      
       const tx = await contract.claimRefund(campaign.id);
-      await tx.wait();
-      toast.success("Refund claimed successfully! 💸");
-      onSuccess();
+      
+      // Show transaction submitted notification
+      await notifyTransactionSubmitted(tx.hash);
+      
+      // Wait for confirmation
+      const receipt = await tx.wait();
+      
+      // Only show success after confirmation
+      if (receipt.status === 1) {
+        await notifyTransactionConfirmed('refund', {
+          body: `Successfully claimed refund of ${myContribution} ETH from ${campaign.title}`
+        });
+        onSuccess();
+      } else {
+        await notifyTransactionFailed("Transaction failed", "refund");
+      }
     } catch (error) {
       console.error(error);
-      toast.error("Refund failed: " + error.message);
+      await notifyTransactionFailed(error.message, "refund");
     } finally {
       setLoading(false);
     }
@@ -208,11 +254,13 @@ const CampaignDetail = ({ campaign, account, onClose, onSuccess }) => {
   const canDonate = status === "ACTIVE";
 
   return (
-    <div style={styles.overlay} onClick={onClose}>
-      <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <button style={styles.closeBtn} onClick={onClose}>
-          ✕
-        </button>
+    <div style={standalone ? styles.standalonePage : styles.overlay} onClick={standalone ? undefined : onClose}>
+      <div style={standalone ? styles.standaloneModal : styles.modal} onClick={(e) => e.stopPropagation()}>
+        {!standalone && (
+          <button style={styles.closeBtn} onClick={onClose}>
+            X
+          </button>
+        )}
 
         {campaign.imageURI && (
           <img
@@ -228,8 +276,13 @@ const CampaignDetail = ({ campaign, account, onClose, onSuccess }) => {
         <div style={styles.content}>
           <div style={styles.header}>
             <div style={styles.category}>{campaign.category}</div>
-            <div style={{ ...styles.statusBadge, background: getStatusColor(status) }}>
-              {status}
+            <div style={styles.headerActions}>
+              <button style={styles.shareBtn} onClick={copyShareLink}>
+                Copy Campaign Link
+              </button>
+              <div style={{ ...styles.statusBadge, background: getStatusColor(status) }}>
+                {status}
+              </div>
             </div>
           </div>
 
@@ -267,22 +320,22 @@ const CampaignDetail = ({ campaign, account, onClose, onSuccess }) => {
 
           <div style={styles.info}>
             <div style={styles.infoRow}>
-              <span>👤 Creator:</span>
+              <span>Creator:</span>
               <span>{campaign.creatorInfo || "Anonymous"}</span>
             </div>
             <div style={styles.infoRow}>
-              <span>📍 Owner:</span>
+              <span>Owner:</span>
               <span>{campaign.owner.slice(0, 6)}...{campaign.owner.slice(-4)}</span>
             </div>
             {parseFloat(myContribution) > 0 && (
               <div style={styles.infoRow}>
-                <span>💝 Your Contribution:</span>
+                <span>Your Contribution:</span>
                 <span style={styles.highlight}>{myContribution} ETH</span>
               </div>
             )}
             {isOwner && campaign.withdrawn && (
               <div style={styles.infoRow}>
-                <span>✅ Withdrawal Status:</span>
+                <span>Withdrawal Status:</span>
                 <span style={{ ...styles.highlight, color: "#10b981" }}>
                   Funds Withdrawn ({ethers.formatEther(campaign.raisedAmount)} ETH)
                 </span>
@@ -290,7 +343,7 @@ const CampaignDetail = ({ campaign, account, onClose, onSuccess }) => {
             )}
             {isOwner && !campaign.withdrawn && status === "FUNDED" && (
               <div style={styles.infoRow}>
-                <span>⏳ Withdrawal Status:</span>
+                <span>Withdrawal Status:</span>
                 <span style={{ ...styles.highlight, color: "#f59e0b" }}>
                   Ready to Withdraw
                 </span>
@@ -298,7 +351,7 @@ const CampaignDetail = ({ campaign, account, onClose, onSuccess }) => {
             )}
           </div>
 
-          {canDonate && (
+          {canDonate && account && (
             <div style={styles.donateSection}>
               <div style={styles.inputGroup}>
                 <span style={styles.currencySymbol}>{CURRENCY.symbol}</span>
@@ -324,14 +377,27 @@ const CampaignDetail = ({ campaign, account, onClose, onSuccess }) => {
                 disabled={loading}
                 style={styles.donateBtn}
               >
-                {loading ? "Processing..." : "Donate Now 💖"}
+                {loading ? "Processing..." : "Donate Now"}
               </button>
+            </div>
+          )}
+
+          {canDonate && !account && (
+            <div style={styles.connectWalletSection}>
+              <div style={styles.connectWalletContent}>
+                <h4 style={styles.connectWalletTitle}>Want to Support This Campaign?</h4>
+                <p style={styles.connectWalletText}>
+                  Connect your wallet to donate and help this campaign reach its goal.
+                </p>
+                <button style={styles.connectWalletBtn} onClick={() => toast.info("Please use the Connect Wallet button in the top navigation")}>
+                  Connect Wallet to Donate
+                </button>
+              </div>
             </div>
           )}
 
           {hasProofRequirement && (
             <div style={styles.proofRequirement}>
-              <div style={styles.requirementIcon}>⚠️</div>
               <div style={styles.requirementContent}>
                 <h4 style={styles.requirementTitle}>Proof Required for Withdrawal</h4>
                 <p style={styles.requirementText}>
@@ -348,7 +414,7 @@ const CampaignDetail = ({ campaign, account, onClose, onSuccess }) => {
               disabled={loading}
               style={styles.withdrawBtn}
             >
-              {loading ? "Processing..." : "Withdraw Funds 💰"}
+              {loading ? "Processing..." : "Withdraw Funds"}
             </button>
           )}
 
@@ -358,13 +424,15 @@ const CampaignDetail = ({ campaign, account, onClose, onSuccess }) => {
               disabled={loading}
               style={styles.refundBtn}
             >
-              {loading ? "Processing..." : "Claim Refund 💸"}
+              {loading ? "Processing..." : "Claim Refund"}
             </button>
           )}
 
-          {!account && (
-            <div style={styles.warning}>
-              Please connect your wallet to interact with this campaign
+          {!account && status !== "ACTIVE" && (
+            <div style={styles.infoMessage}>
+              <div style={styles.infoText}>
+                Connect your wallet to see your contribution history and interact with campaigns
+              </div>
             </div>
           )}
 
@@ -428,6 +496,11 @@ const styles = {
     zIndex: 3000,
     padding: "1rem",
   },
+  standalonePage: {
+    minHeight: "100vh",
+    background: "#f9fafb",
+    padding: "2rem 0",
+  },
   modal: {
     background: "white",
     borderRadius: "20px",
@@ -437,6 +510,14 @@ const styles = {
     overflow: "auto",
     position: "relative",
     boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
+  },
+  standaloneModal: {
+    background: "white",
+    borderRadius: "20px",
+    maxWidth: "800px",
+    width: "100%",
+    margin: "0 auto",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
   },
   closeBtn: {
     position: "absolute",
@@ -465,6 +546,24 @@ const styles = {
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: "1rem",
+    flexWrap: "wrap",
+    gap: "1rem",
+  },
+  headerActions: {
+    display: "flex",
+    alignItems: "center",
+    gap: "1rem",
+  },
+  shareBtn: {
+    padding: "0.5rem 1rem",
+    background: "rgba(102, 126, 234, 0.1)",
+    color: "#667eea",
+    border: "2px solid #667eea",
+    borderRadius: "20px",
+    fontSize: "0.85rem",
+    fontWeight: "600",
+    cursor: "pointer",
+    transition: "all 0.3s",
   },
   category: {
     background: "#f3f4f6",
@@ -641,10 +740,6 @@ const styles = {
     padding: "1.5rem",
     marginBottom: "1rem",
   },
-  requirementIcon: {
-    fontSize: "1.5rem",
-    flexShrink: 0,
-  },
   requirementContent: {
     flex: 1,
   },
@@ -657,6 +752,58 @@ const styles = {
   requirementText: {
     fontSize: "0.95rem",
     color: "#92400e",
+    margin: 0,
+    lineHeight: "1.5",
+  },
+  connectWalletSection: {
+    display: "flex",
+    alignItems: "center",
+    gap: "1rem",
+    background: "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)",
+    border: "2px solid #0ea5e9",
+    borderRadius: "12px",
+    padding: "1.5rem",
+    marginBottom: "1rem",
+  },
+  connectWalletContent: {
+    flex: 1,
+  },
+  connectWalletTitle: {
+    fontSize: "1.1rem",
+    fontWeight: "700",
+    color: "#0c4a6e",
+    margin: "0 0 0.5rem 0",
+  },
+  connectWalletText: {
+    fontSize: "0.95rem",
+    color: "#0c4a6e",
+    margin: "0 0 1rem 0",
+    lineHeight: "1.5",
+  },
+  connectWalletBtn: {
+    padding: "0.75rem 1.5rem",
+    background: "linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)",
+    color: "white",
+    border: "none",
+    borderRadius: "8px",
+    fontSize: "0.9rem",
+    fontWeight: "600",
+    cursor: "pointer",
+    transition: "all 0.3s",
+  },
+  infoMessage: {
+    display: "flex",
+    alignItems: "center",
+    gap: "1rem",
+    background: "#f9fafb",
+    border: "2px solid #e5e7eb",
+    borderRadius: "12px",
+    padding: "1.5rem",
+    marginBottom: "1rem",
+  },
+  infoText: {
+    fontSize: "0.95rem",
+    color: "#6b7280",
     margin: 0,
     lineHeight: "1.5",
   },

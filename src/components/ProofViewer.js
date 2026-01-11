@@ -57,7 +57,6 @@ const ProofViewer = ({ campaignId, contract }) => {
 
       {proofs.length === 0 ? (
         <div style={styles.empty}>
-          <div style={styles.emptyIcon}>📋</div>
           <p style={styles.emptyText}>No proofs uploaded yet</p>
           <p style={styles.emptySubtext}>
             Campaign owner can upload fund utilization proofs above.
@@ -68,7 +67,6 @@ const ProofViewer = ({ campaignId, contract }) => {
           {proofs.map((proof) => (
             <div key={proof.id} style={styles.proofCard}>
               <div style={styles.proofInfo}>
-                <div style={styles.proofIcon}>📄</div>
                 <div style={styles.proofDetails}>
                   <div style={styles.proofTitle}>
                     Fund Utilization Proof #{proof.id + 1}
@@ -87,7 +85,7 @@ const ProofViewer = ({ campaignId, contract }) => {
                   onClick={() => openProof(proof.ipfsUrl)}
                   style={styles.viewButton}
                 >
-                  👁️ View Proof
+                  View Proof
                 </button>
                 <a
                   href={proof.ipfsUrl}
@@ -95,7 +93,7 @@ const ProofViewer = ({ campaignId, contract }) => {
                   rel="noopener noreferrer"
                   style={styles.ipfsLink}
                 >
-                  🔗 IPFS Link
+                  IPFS Link
                 </a>
               </div>
             </div>
@@ -105,7 +103,7 @@ const ProofViewer = ({ campaignId, contract }) => {
 
       <div style={styles.footer}>
         <p style={styles.footerText}>
-          🔒 All proofs are stored on IPFS (decentralized storage) and cannot be deleted or modified.
+          All proofs are stored on IPFS (decentralized storage) and cannot be deleted or modified.
         </p>
       </div>
     </div>
@@ -152,10 +150,6 @@ const styles = {
     padding: '2rem',
     color: '#6b7280',
   },
-  emptyIcon: {
-    fontSize: '2.5rem',
-    marginBottom: '1rem',
-  },
   emptyText: {
     fontSize: '1rem',
     fontWeight: '600',
@@ -184,9 +178,6 @@ const styles = {
     alignItems: 'center',
     gap: '1rem',
     flex: 1,
-  },
-  proofIcon: {
-    fontSize: '1.5rem',
   },
   proofDetails: {
     flex: 1,

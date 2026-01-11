@@ -1,8 +1,8 @@
-# CrowdFund Platform
+# RaiseX
 
-A decentralized crowdfunding platform where you can create campaigns, donate to causes, and track funding progress.
+RaiseX — Trust, Raised on Chain. A decentralized crowdfunding platform where you can create campaigns, donate to causes, and track funding progress.
 
-**🌐 Live Platform**: [https://crowdfundweb.vercel.app/](https://crowdfundweb.vercel.app/)
+**Live Platform**: [https://crowdfundweb.vercel.app/](https://crowdfundweb.vercel.app/)
 
 ## Getting Started
 
@@ -58,11 +58,11 @@ A decentralized crowdfunding platform where you can create campaigns, donate to 
 
 ### Managing Your Activities
 Navigate using the tabs at the top:
-- **📋 All Campaigns**: Browse all available campaigns
-- **🎯 My Campaigns**: View campaigns you've created
-- **💝 My Donations**: See your donation history
-- **💰 My Withdrawals**: Track withdrawal records
-- **📊 Analytics**: View platform statistics
+- **All Campaigns**: Browse all available campaigns
+- **My Campaigns**: View campaigns you've created
+- **My Donations**: See your donation history
+- **My Withdrawals**: Track withdrawal records
+- **Analytics**: View platform statistics
 
 ### Withdrawing Funds (Campaign Creators)
 1. Go to "My Campaigns" tab

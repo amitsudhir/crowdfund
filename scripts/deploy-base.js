@@ -3,12 +3,12 @@ const fs = require("fs");
 const path = require("path");
 
 async function main() {
-  console.log("🚀 Starting Crowdfund deployment to Base Sepolia...\n");
+  console.log("Starting Crowdfund deployment to Base Sepolia...\n");
 
   // Check environment variables
   if (!process.env.DEPLOYER_PRIVATE_KEY) {
-    console.error("❌ Error: DEPLOYER_PRIVATE_KEY not found in .env file");
-    console.log("\n📝 TODO:");
+    console.error("Error: DEPLOYER_PRIVATE_KEY not found in .env file");
+    console.log("\nTODO:");
     console.log("   1. Copy .env.example to .env");
     console.log("   2. Add your MetaMask private key");
     console.log("   3. Run: npm run deploy:base");
@@ -16,30 +16,30 @@ async function main() {
   }
 
   if (!process.env.RPC_URL_BASE_SEPOLIA) {
-    console.error("❌ Error: RPC_URL_BASE_SEPOLIA not found in .env file");
+    console.error("Error: RPC_URL_BASE_SEPOLIA not found in .env file");
     process.exit(1);
   }
 
   // Get deployer account
   const [deployer] = await ethers.getSigners();
-  console.log("📝 Deploying with account:", deployer.address);
+  console.log("Deploying with account:", deployer.address);
 
   // Check balance
   const balance = await ethers.provider.getBalance(deployer.address);
-  console.log("💰 Account balance:", ethers.formatEther(balance), "ETH");
+  console.log("Account balance:", ethers.formatEther(balance), "ETH");
 
   if (balance === 0n) {
-    console.error("❌ Error: Deployer account has no ETH");
-    console.log("💡 Get test ETH from: https://www.alchemy.com/faucets/base-sepolia");
+    console.error("Error: Deployer account has no ETH");
+    console.log("Get test ETH from: https://www.alchemy.com/faucets/base-sepolia");
     process.exit(1);
   }
 
-  console.log("\n⏳ Compiling contracts...");
+  console.log("\nCompiling contracts...");
 
   // Get contract factory
   const Crowdfund = await ethers.getContractFactory("Crowdfund");
 
-  console.log("⏳ Deploying Crowdfund contract...");
+  console.log("Deploying Crowdfund contract...");
 
   // Deploy contract
   const crowdfund = await Crowdfund.deploy();
@@ -47,29 +47,29 @@ async function main() {
 
   const contractAddress = await crowdfund.getAddress();
 
-  console.log("\n✅ Contract deployed successfully!");
-  console.log("📍 Contract address:", contractAddress);
-  console.log("🔗 View on BaseScan:", `https://sepolia.basescan.org/address/${contractAddress}`);
+  console.log("\nContract deployed successfully!");
+  console.log("Contract address:", contractAddress);
+  console.log("View on BaseScan:", `https://sepolia.basescan.org/address/${contractAddress}`);
 
   // Wait for a few confirmations
-  console.log("\n⏳ Waiting for confirmations...");
+  console.log("\nWaiting for confirmations...");
   await crowdfund.deploymentTransaction().wait(3);
-  console.log("✅ Confirmed!");
+  console.log("Confirmed!");
 
   // Update frontend config
-  console.log("\n📝 Updating frontend configuration...");
+  console.log("\nUpdating frontend configuration...");
   updateFrontendConfig(contractAddress);
 
   // Export ABI
-  console.log("📝 Exporting ABI to frontend...");
+  console.log("Exporting ABI to frontend...");
   exportABI();
 
-  console.log("\n🎉 Deployment complete!");
-  console.log("\n📋 Next steps:");
+  console.log("\nDeployment complete!");
+  console.log("\nNext steps:");
   console.log("   1. Start your React app: npm start");
   console.log("   2. Connect your wallet");
   console.log("   3. Create campaigns!");
-  console.log("\n💡 To redeploy: npm run deploy:base");
+  console.log("\nTo redeploy: npm run deploy:base");
 }
 
 function updateFrontendConfig(contractAddress) {
@@ -102,10 +102,10 @@ function updateFrontendConfig(contractAddress) {
     }
 
     fs.writeFileSync(configPath, configContent);
-    console.log("   ✅ Updated src/config/config.js");
+    console.log("   Updated src/config/config.js");
   } catch (error) {
-    console.error("   ⚠️  Warning: Could not update config.js:", error.message);
-    console.log("   💡 Manually update CONTRACT_ADDRESS in src/config/config.js");
+    console.error("   Warning: Could not update config.js:", error.message);
+    console.log("   Manually update CONTRACT_ADDRESS in src/config/config.js");
   }
 }
 
@@ -135,13 +135,13 @@ function exportABI() {
 
     // Write to frontend
     fs.writeFileSync(outputPath, JSON.stringify(abiExport, null, 2));
-    console.log("   ✅ Exported ABI to src/artifacts/Crowdfund.json");
+    console.log("   Exported ABI to src/artifacts/Crowdfund.json");
 
     // Also update contract.js with the ABI
     updateContractABI(artifact.abi);
   } catch (error) {
-    console.error("   ⚠️  Warning: Could not export ABI:", error.message);
-    console.log("   💡 Manually copy ABI from artifacts/contracts/Crowdfund.sol/Crowdfund.json");
+    console.error("   Warning: Could not export ABI:", error.message);
+    console.log("   Manually copy ABI from artifacts/contracts/Crowdfund.sol/Crowdfund.json");
   }
 }
 
@@ -161,10 +161,10 @@ function updateContractABI(abi) {
         `export const CONTRACT_ABI = ${abiString};`
       );
       fs.writeFileSync(contractPath, contractContent);
-      console.log("   ✅ Updated ABI in src/config/contract.js");
+      console.log("   Updated ABI in src/config/contract.js");
     }
   } catch (error) {
-    console.error("   ⚠️  Warning: Could not update contract.js:", error.message);
+    console.error("   Warning: Could not update contract.js:", error.message);
   }
 }
 
@@ -172,7 +172,7 @@ function updateContractABI(abi) {
 main()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error("\n❌ Deployment failed:");
+    console.error("\nDeployment failed:");
     console.error(error);
     process.exit(1);
   });

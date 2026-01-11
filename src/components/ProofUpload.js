@@ -101,7 +101,7 @@ const ProofUpload = ({ campaignId, onProofUploaded }) => {
       // Reset form
       setSelectedFile(null);
       document.getElementById('proof-file-input').value = '';
-      toast.success('Proof added to blockchain successfully! 🎉');
+      toast.success('Proof added to blockchain successfully!');
     } catch (error) {
       console.error('Upload failed:', error);
       if (error.message.includes('User rejected')) {
@@ -125,7 +125,6 @@ const ProofUpload = ({ campaignId, onProofUploaded }) => {
           (Future versions will link these proofs to milestone-based fund release.)
         </p>
         <div style={styles.requirement}>
-          <span style={styles.requirementIcon}>⚠️</span>
           <span style={styles.requirementText}>
             <strong>Required for withdrawal:</strong> At least one proof must be uploaded before funds can be withdrawn.
           </span>
@@ -142,13 +141,13 @@ const ProofUpload = ({ campaignId, onProofUploaded }) => {
             style={styles.hiddenInput}
           />
           <label htmlFor="proof-file-input" style={styles.fileLabel}>
-            📎 Choose File (JPG, PNG, PDF)
+            Choose File (JPG, PNG, PDF)
           </label>
         </div>
 
         {selectedFile && (
           <div style={styles.selectedFile}>
-            <span style={styles.fileName}>📄 {selectedFile.name}</span>
+            <span style={styles.fileName}>{selectedFile.name}</span>
             <span style={styles.fileSize}>
               ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
             </span>
@@ -164,13 +163,13 @@ const ProofUpload = ({ campaignId, onProofUploaded }) => {
             cursor: (!selectedFile || uploading) ? 'not-allowed' : 'pointer'
           }}
         >
-          {uploading ? '⏳ Uploading to IPFS...' : '📤 Upload Proof'}
+          {uploading ? 'Uploading to IPFS...' : 'Upload Proof'}
         </button>
       </div>
 
       <div style={styles.note}>
         <p style={styles.noteText}>
-          💡 Files are stored on IPFS (decentralized storage) and linked to this campaign permanently.
+          Files are stored on IPFS (decentralized storage) and linked to this campaign permanently.
         </p>
       </div>
     </div>
@@ -277,9 +276,6 @@ const styles = {
     background: '#fef3c7',
     border: '1px solid #f59e0b',
     borderRadius: '6px',
-  },
-  requirementIcon: {
-    fontSize: '1rem',
   },
   requirementText: {
     fontSize: '0.85rem',

@@ -1,64 +1,67 @@
 import React from "react";
+import { Link, useLocation } from "react-router-dom";
 import { NETWORK_CONFIG } from "../config/config";
+import "./Navbar.css";
 
 const Navbar = ({ account, onConnect }) => {
+  const location = useLocation();
+
   const shortenAddress = (addr) => {
     if (!addr) return "";
     return addr.slice(0, 6) + "..." + addr.slice(-4);
   };
 
-  const switchNetwork = async () => {
-    if (!window.ethereum) {
-      alert("Please install MetaMask!");
-      return;
-    }
-
-    try {
-      await window.ethereum.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: NETWORK_CONFIG.chainId }],
-      });
-      alert("Switched to Base Sepolia!");
-    } catch (error) {
-      // If network doesn't exist, add it
-      if (error.code === 4902) {
-        try {
-          await window.ethereum.request({
-            method: "wallet_addEthereumChain",
-            params: [NETWORK_CONFIG],
-          });
-          alert("Base Sepolia network added!");
-        } catch (addError) {
-          console.error("Failed to add network:", addError);
-          alert("Failed to add network: " + addError.message);
-        }
-      } else {
-        console.error("Failed to switch network:", error);
-        alert("Failed to switch network: " + error.message);
-      }
-    }
+  const isActive = (path) => {
+    if (path === "/" && location.pathname === "/") return true;
+    if (path !== "/" && location.pathname.startsWith(path)) return true;
+    return false;
   };
+
+  const navLinks = [
+    { path: "/", label: "Home" },
+    { path: "/my-campaigns", label: "My Campaigns" },
+    { path: "/my-donations", label: "My Donations" },
+    { path: "/my-withdrawals", label: "My Withdrawals" },
+    { path: "/analytics", label: "Analytics" },
+    { path: "/faq", label: "FAQ" },
+  ];
 
   return (
     <nav style={styles.nav}>
-      <div style={styles.container}>
+      <div style={styles.container} className="nav-container">
         <div style={styles.brand}>
-          <h1 style={styles.logo}>🚀 CrowdFund</h1>
+          <Link to="/" style={styles.brandLink}>
+            <h1 style={styles.logo}>RaiseX</h1>
+          </Link>
         </div>
+        
+        <div style={styles.navLinks} className="nav-links">
+          {navLinks.map((link) => (
+            <Link
+              key={link.path}
+              to={link.path}
+              style={{
+                ...styles.navLink,
+                ...(isActive(link.path) ? styles.navLinkActive : {}),
+              }}
+              className="nav-link"
+            >
+              <span style={styles.navLabel} className="nav-label">{link.label}</span>
+            </Link>
+          ))}
+        </div>
+
         <div style={styles.actions}>
           {account ? (
-            <div style={styles.accountInfo}>
-              <span style={styles.network}>{NETWORK_CONFIG.chainName}</span>
-              <span style={styles.address}>{shortenAddress(account)}</span>
+            <div style={styles.accountInfo} className="account-info">
+              <span style={styles.network} className="network">{NETWORK_CONFIG.chainName}</span>
+              <span style={styles.address} className="address">{shortenAddress(account)}</span>
             </div>
           ) : (
             <button style={styles.connectBtn} onClick={onConnect}>
               Connect Wallet
             </button>
           )}
-          <button style={styles.networkBtn} onClick={switchNetwork}>
-            Switch Network
-          </button>
         </div>
       </div>
     </nav>
@@ -81,16 +84,51 @@ const styles = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
+    gap: "2rem",
   },
   brand: {
     display: "flex",
     alignItems: "center",
+  },
+  brandLink: {
+    textDecoration: "none",
   },
   logo: {
     color: "white",
     fontSize: "1.5rem",
     fontWeight: "bold",
     margin: 0,
+  },
+  navLinks: {
+    display: "flex",
+    gap: "0.5rem",
+    alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
+  },
+  navLink: {
+    display: "flex",
+    alignItems: "center",
+    gap: "0.5rem",
+    padding: "0.5rem 1rem",
+    borderRadius: "20px",
+    textDecoration: "none",
+    color: "rgba(255, 255, 255, 0.8)",
+    fontSize: "0.9rem",
+    fontWeight: "500",
+    transition: "all 0.3s ease",
+    whiteSpace: "nowrap",
+  },
+  navLinkActive: {
+    background: "rgba(255, 255, 255, 0.2)",
+    color: "white",
+    fontWeight: "600",
+  },
+  navIcon: {
+    fontSize: "1rem",
+  },
+  navLabel: {
+    display: "none",
   },
   actions: {
     display: "flex",
@@ -127,15 +165,15 @@ const styles = {
     fontSize: "1rem",
     transition: "transform 0.2s",
   },
-  networkBtn: {
-    background: "rgba(255,255,255,0.2)",
-    color: "white",
-    border: "1px solid white",
-    padding: "0.5rem 1rem",
-    borderRadius: "20px",
-    cursor: "pointer",
-    fontSize: "0.9rem",
-  },
 };
+
+// Add responsive styles using CSS-in-JS media queries
+if (typeof window !== 'undefined') {
+  const mediaQuery = window.matchMedia('(min-width: 768px)');
+  if (mediaQuery.matches) {
+    styles.navLabel.display = 'block';
+    styles.navLinks.gap = '1rem';
+  }
+}
 
 export default Navbar;

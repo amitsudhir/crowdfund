@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, useParams, useNavigate } from "react-router-dom";
 import "./App.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -10,15 +11,25 @@ import MyDonations from "./components/MyDonations";
 import MyWithdrawals from "./components/MyWithdrawals";
 import MyCampaigns from "./components/MyCampaigns";
 import SetupChecker from "./components/SetupChecker";
+import CampaignDetail from "./components/CampaignDetail";
+import FAQ from "./components/FAQ";
+import Terms from "./components/Terms";
+import Privacy from "./components/Privacy";
+import Footer from "./components/Footer";
+import NetworkChecker from "./components/NetworkChecker";
+import { getReadOnlyContract } from "./config/contract";
+import { notifyWalletConnected, requestNotificationPermission } from "./utils/notifications";
 
 function App() {
   const [account, setAccount] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [activeTab, setActiveTab] = useState("campaigns");
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     checkWalletConnection();
+    
+    // Request notification permission on app load
+    requestNotificationPermission();
     
     if (window.ethereum) {
       window.ethereum.on("accountsChanged", handleAccountsChanged);
@@ -66,7 +77,7 @@ function App() {
         method: "eth_requestAccounts",
       });
       setAccount(accounts[0]);
-      toast.success("Wallet connected successfully! 🎉");
+      await notifyWalletConnected(accounts[0]);
     } catch (error) {
       console.error("Failed to connect wallet:", error);
       toast.error("Failed to connect wallet: " + error.message);
@@ -79,106 +90,176 @@ function App() {
   };
 
   return (
-    <div className="App">
-      <Navbar account={account} onConnect={connectWallet} />
+    <Router>
+      <div className="App">
+        <Navbar account={account} onConnect={connectWallet} />
+        <NetworkChecker />
 
-      <div style={styles.container}>
-        <div style={styles.header}>
-          <h1 style={styles.mainTitle}>
-            Welcome to CrowdFund Platform 🚀
-          </h1>
-          <p style={styles.subtitle}>
-            Create campaigns, support causes, and make a difference
-          </p>
-        </div>
+        <Routes>
+          <Route path="/" element={
+            <HomePage 
+              account={account}
+              refreshTrigger={refreshTrigger}
+            />
+          } />
+          <Route path="/explore" element={
+            <ExplorePage account={account} refreshTrigger={refreshTrigger} />
+          } />
+          <Route path="/campaign/:id" element={
+            <CampaignDetailPage account={account} />
+          } />
+          <Route path="/create" element={
+            <CreateCampaignPage 
+              onSuccess={handleCreateSuccess}
+            />
+          } />
+          <Route path="/my-campaigns" element={
+            <MyCampaigns account={account} />
+          } />
+          <Route path="/my-donations" element={
+            <MyDonations account={account} />
+          } />
+          <Route path="/my-withdrawals" element={
+            <MyWithdrawals account={account} />
+          } />
+          <Route path="/analytics" element={
+            <Analytics />
+          } />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
+        </Routes>
 
-        <div style={styles.tabs}>
-          <button
-            style={{
-              ...styles.tab,
-              ...(activeTab === "campaigns" ? styles.tabActive : {}),
-            }}
-            onClick={() => setActiveTab("campaigns")}
-          >
-            📋 All Campaigns
-          </button>
-          <button
-            style={{
-              ...styles.tab,
-              ...(activeTab === "myCampaigns" ? styles.tabActive : {}),
-            }}
-            onClick={() => setActiveTab("myCampaigns")}
-          >
-            🎯 My Campaigns
-          </button>
-          <button
-            style={{
-              ...styles.tab,
-              ...(activeTab === "donations" ? styles.tabActive : {}),
-            }}
-            onClick={() => setActiveTab("donations")}
-          >
-            💝 My Donations
-          </button>
-          <button
-            style={{
-              ...styles.tab,
-              ...(activeTab === "withdrawals" ? styles.tabActive : {}),
-            }}
-            onClick={() => setActiveTab("withdrawals")}
-          >
-            💰 My Withdrawals
-          </button>
-          <button
-            style={{
-              ...styles.tab,
-              ...(activeTab === "analytics" ? styles.tabActive : {}),
-            }}
-            onClick={() => setActiveTab("analytics")}
-          >
-            📊 Analytics
-          </button>
-          <button
-            style={styles.createBtn}
-            onClick={() => setShowCreateModal(true)}
-          >
-            ➕ Create Campaign
-          </button>
-        </div>
+        <Footer />
 
-        <SetupChecker account={account} />
-        
-        {activeTab === "campaigns" && (
-          <CampaignList account={account} refreshTrigger={refreshTrigger} />
+        {showCreateModal && (
+          <CreateCampaign
+            onSuccess={handleCreateSuccess}
+            onClose={() => setShowCreateModal(false)}
+          />
         )}
-        {activeTab === "myCampaigns" && <MyCampaigns account={account} />}
-        {activeTab === "donations" && <MyDonations account={account} />}
-        {activeTab === "withdrawals" && <MyWithdrawals account={account} />}
-        {activeTab === "analytics" && <Analytics />}
+
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
+      </div>
+    </Router>
+  );
+}
+
+// Home Page Component
+const HomePage = ({ account, refreshTrigger }) => {
+  return (
+    <div style={styles.container}>
+      <div style={styles.header}>
+        <h1 style={styles.mainTitle}>
+          Welcome to RaiseX
+        </h1>
+        <p style={styles.subtitle}>
+          RaiseX — Trust, Raised on Chain
+        </p>
       </div>
 
-      {showCreateModal && (
-        <CreateCampaign
-          onSuccess={handleCreateSuccess}
-          onClose={() => setShowCreateModal(false)}
-        />
-      )}
+      <SetupChecker account={account} />
+      
+      <CampaignList account={account} refreshTrigger={refreshTrigger} showHeader={false} />
+    </div>
+  );
+};
 
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
+// Explore Page Component (dedicated campaigns page)
+const ExplorePage = ({ account, refreshTrigger }) => {
+  return (
+    <div style={styles.container}>
+      <CampaignList account={account} refreshTrigger={refreshTrigger} showHeader={true} />
+    </div>
+  );
+};
+
+// Campaign Detail Page Component
+const CampaignDetailPage = ({ account }) => {
+  const { id } = useParams();
+  const [campaign, setCampaign] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    loadCampaign();
+  }, [id]);
+
+  const loadCampaign = async () => {
+    try {
+      setLoading(true);
+      const { contract } = await getReadOnlyContract();
+      const campaignData = await contract.getCampaign(id);
+      setCampaign(campaignData);
+    } catch (error) {
+      console.error("Failed to load campaign:", error);
+      toast.error("Campaign not found");
+      navigate("/explore");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div style={styles.loading}>
+        <div style={styles.spinner}></div>
+        <p>Loading campaign...</p>
+      </div>
+    );
+  }
+
+  if (!campaign) {
+    return null;
+  }
+
+  return (
+    <div style={styles.container}>
+      <CampaignDetail
+        campaign={campaign}
+        account={account}
+        onClose={() => navigate("/explore")}
+        onSuccess={() => loadCampaign()}
+        standalone={true}
       />
     </div>
   );
-}
+};
+
+// Create Campaign Page Component
+const CreateCampaignPage = ({ onSuccess }) => {
+  const navigate = useNavigate();
+  
+  const handleSuccess = () => {
+    onSuccess();
+    navigate("/explore");
+  };
+
+  const handleClose = () => {
+    navigate("/");
+  };
+
+  return (
+    <div style={styles.container}>
+      <CreateCampaign
+        onSuccess={handleSuccess}
+        onClose={handleClose}
+        standalone={true}
+      />
+    </div>
+  );
+};
 
 const styles = {
   container: {
@@ -208,49 +289,38 @@ const styles = {
   subtitle: {
     fontSize: "1.25rem",
     opacity: 0.8,
-    margin: 0,
+    margin: "0 0 2rem 0",
     color: "#4c1d95",
   },
-  tabs: {
-    maxWidth: "1200px",
-    margin: "0 auto",
-    padding: "2rem 1rem 0",
+  headerActions: {
     display: "flex",
+    justifyContent: "center",
     gap: "1rem",
-    flexWrap: "wrap",
   },
-  tab: {
-    padding: "0.75rem 1.5rem",
-    border: "2px solid rgba(255, 255, 255, 0.3)",
-    background: "rgba(255, 255, 255, 0.2)",
-    backdropFilter: "blur(10px)",
-    borderRadius: "25px",
-    cursor: "pointer",
-    fontWeight: "600",
-    fontSize: "1rem",
-    color: "#4c1d95",
-    transition: "all 0.3s ease",
-    boxShadow: "0 4px 15px rgba(0, 0, 0, 0.1)",
-  },
-  tabActive: {
-    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-    color: "white",
-    borderColor: "transparent",
-    transform: "translateY(-2px)",
-    boxShadow: "0 8px 25px rgba(102, 126, 234, 0.3)",
-  },
-  createBtn: {
-    marginLeft: "auto",
-    padding: "0.75rem 1.5rem",
+  primaryBtn: {
+    padding: "1rem 2rem",
     border: "none",
     background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
     color: "white",
     borderRadius: "25px",
     cursor: "pointer",
     fontWeight: "600",
-    fontSize: "1rem",
+    fontSize: "1.1rem",
     boxShadow: "0 4px 15px rgba(16, 185, 129, 0.3)",
     transition: "all 0.3s ease",
+  },
+  loading: {
+    textAlign: "center",
+    padding: "4rem 1rem",
+  },
+  spinner: {
+    width: "50px",
+    height: "50px",
+    border: "4px solid #f3f4f6",
+    borderTop: "4px solid #667eea",
+    borderRadius: "50%",
+    animation: "spin 1s linear infinite",
+    margin: "0 auto 1rem",
   },
 };
 

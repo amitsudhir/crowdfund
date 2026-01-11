@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { ethers } from "ethers";
 import { getReadOnlyContract, getContract } from "../config/contract";
 import { CURRENCY, ethToInr } from "../config/config";
@@ -9,6 +10,7 @@ const MyCampaigns = ({ account }) => {
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [withdrawing, setWithdrawing] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (account) {
@@ -20,25 +22,51 @@ const MyCampaigns = ({ account }) => {
   const loadMyCampaigns = async () => {
     try {
       setLoading(true);
-      const { contract } = await getReadOnlyContract();
+      const { contract, provider } = await getReadOnlyContract();
       const allCampaigns = await contract.getAllCampaigns();
       
-      const myCampaigns = allCampaigns
-        .filter((c) => c.owner.toLowerCase() === account.toLowerCase())
-        .map((c) => ({
-          id: c.id.toString(),
-          title: c.title,
-          description: c.description,
-          goalAmount: ethers.formatEther(c.goalAmount),
-          raisedAmount: ethers.formatEther(c.raisedAmount),
-          deadline: new Date(Number(c.deadline) * 1000),
-          imageURI: c.imageURI,
-          category: c.category,
-          donorsCount: c.donorsCount.toString(),
-          withdrawn: c.withdrawn,
-          isActive: Number(c.deadline) * 1000 > Date.now(),
-          goalReached: c.raisedAmount >= c.goalAmount,
-        }));
+      const myCampaigns = [];
+      
+      for (const c of allCampaigns) {
+        if (c.owner.toLowerCase() === account.toLowerCase()) {
+          // Try to get creation timestamp from events
+          let creationTimestamp = null;
+          try {
+            const filter = contract.filters.CampaignCreated(c.id);
+            const events = await contract.queryFilter(filter);
+            if (events.length > 0) {
+              const block = await provider.getBlock(events[0].blockNumber);
+              creationTimestamp = block ? block.timestamp * 1000 : null;
+            }
+          } catch (error) {
+            console.log("Could not fetch creation timestamp for campaign", c.id.toString());
+          }
+          
+          myCampaigns.push({
+            id: c.id.toString(),
+            title: c.title,
+            description: c.description,
+            goalAmount: ethers.formatEther(c.goalAmount),
+            raisedAmount: ethers.formatEther(c.raisedAmount),
+            deadline: new Date(Number(c.deadline) * 1000),
+            imageURI: c.imageURI,
+            category: c.category,
+            donorsCount: c.donorsCount.toString(),
+            withdrawn: c.withdrawn,
+            isActive: Number(c.deadline) * 1000 > Date.now(),
+            goalReached: c.raisedAmount >= c.goalAmount,
+            createdAt: creationTimestamp ? new Date(creationTimestamp) : null,
+          });
+        }
+      }
+
+      // Sort by creation date (newest first) or by campaign ID if no date
+      myCampaigns.sort((a, b) => {
+        if (a.createdAt && b.createdAt) {
+          return b.createdAt - a.createdAt;
+        }
+        return parseInt(b.id) - parseInt(a.id);
+      });
 
       setCampaigns(myCampaigns);
     } catch (error) {
@@ -47,6 +75,10 @@ const MyCampaigns = ({ account }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCampaignClick = (campaignId) => {
+    navigate(`/campaign/${campaignId}`);
   };
 
 
@@ -82,7 +114,7 @@ const MyCampaigns = ({ account }) => {
         );
       }
       
-      toast.success("Funds withdrawn successfully! 🎉");
+      toast.success("Funds withdrawn successfully!");
       loadMyCampaigns();
     } catch (error) {
       console.error("Withdrawal failed:", error);
@@ -96,7 +128,6 @@ const MyCampaigns = ({ account }) => {
     return (
       <div style={styles.container}>
         <div style={styles.empty}>
-          <div style={styles.emptyIcon}>🔐</div>
           <h3>Connect Your Wallet</h3>
           <p>Please connect your wallet to view your campaigns</p>
         </div>
@@ -121,7 +152,7 @@ const MyCampaigns = ({ account }) => {
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h2 style={styles.title}>🎯 My Campaigns</h2>
+        <h2 style={styles.title}>My Campaigns</h2>
         <div style={styles.stats}>
           <div style={styles.statBox}>
             <div style={styles.statValue}>{campaigns.length}</div>
@@ -140,7 +171,7 @@ const MyCampaigns = ({ account }) => {
 
       {campaigns.length === 0 ? (
         <div style={styles.empty}>
-          <div style={styles.emptyIcon}>📝</div>
+          <div style={styles.emptyText}>No Campaigns</div>
           <h3>No Campaigns Yet</h3>
           <p>Create your first campaign to get started!</p>
         </div>
@@ -148,7 +179,7 @@ const MyCampaigns = ({ account }) => {
         <>
           {activeCampaigns.length > 0 && (
             <div style={styles.section}>
-              <h3 style={styles.sectionTitle}>🟢 Active Campaigns</h3>
+              <h3 style={styles.sectionTitle}>Active Campaigns</h3>
               <div style={styles.grid}>
                 {activeCampaigns.map((campaign) => (
                   <CampaignCard
@@ -156,6 +187,7 @@ const MyCampaigns = ({ account }) => {
                     campaign={campaign}
                     onWithdraw={handleWithdraw}
                     withdrawing={withdrawing}
+                    onClick={() => handleCampaignClick(campaign.id)}
                   />
                 ))}
               </div>
@@ -164,7 +196,7 @@ const MyCampaigns = ({ account }) => {
 
           {completedCampaigns.length > 0 && (
             <div style={styles.section}>
-              <h3 style={styles.sectionTitle}>⚫ Completed Campaigns</h3>
+              <h3 style={styles.sectionTitle}>Completed Campaigns</h3>
               <div style={styles.grid}>
                 {completedCampaigns.map((campaign) => (
                   <CampaignCard
@@ -172,6 +204,7 @@ const MyCampaigns = ({ account }) => {
                     campaign={campaign}
                     onWithdraw={handleWithdraw}
                     withdrawing={withdrawing}
+                    onClick={() => handleCampaignClick(campaign.id)}
                   />
                 ))}
               </div>
@@ -183,7 +216,7 @@ const MyCampaigns = ({ account }) => {
   );
 };
 
-const CampaignCard = ({ campaign, onWithdraw, withdrawing }) => {
+const CampaignCard = ({ campaign, onWithdraw, withdrawing, onClick }) => {
   const [proofCount, setProofCount] = useState(0);
   const [contract, setContract] = useState(null);
   
@@ -209,8 +242,16 @@ const CampaignCard = ({ campaign, onWithdraw, withdrawing }) => {
   const needsProof = campaign.goalReached && !campaign.withdrawn && !campaign.isActive && proofCount === 0;
   const canWithdraw = campaign.goalReached && !campaign.withdrawn && !campaign.isActive && proofCount > 0;
 
+  const handleCardClick = (e) => {
+    // Don't trigger navigation if clicking on buttons
+    if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+      return;
+    }
+    onClick();
+  };
+
   return (
-    <div style={styles.card}>
+    <div style={styles.card} onClick={handleCardClick}>
       <div style={styles.cardImage}>
         <img
           src={campaign.imageURI || "/fund.jpg"}
@@ -219,13 +260,34 @@ const CampaignCard = ({ campaign, onWithdraw, withdrawing }) => {
           onError={(e) => (e.target.src = "/fund.jpg")}
         />
         <div style={styles.badge}>
-          {campaign.withdrawn ? "✅ Withdrawn" : campaign.isActive ? "🟢 Active" : "⚫ Ended"}
+          {campaign.withdrawn ? "Withdrawn" : campaign.isActive ? "Active" : "Ended"}
         </div>
       </div>
 
       <div style={styles.cardContent}>
-        <h3 style={styles.cardTitle}>{campaign.title}</h3>
+        <div style={styles.cardHeader}>
+          <h3 style={styles.cardTitle}>{campaign.title}</h3>
+          <div style={styles.category}>{campaign.category}</div>
+        </div>
+        
         <p style={styles.cardDescription}>{campaign.description}</p>
+
+        {/* Creation Date Section */}
+        <div style={styles.creationDate}>
+          <span style={styles.creationLabel}>Created:</span>
+          <span style={styles.creationValue}>
+            {campaign.createdAt 
+              ? campaign.createdAt.toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })
+              : `Campaign #${campaign.id}`
+            }
+          </span>
+        </div>
 
         <div style={styles.progressSection}>
           <div style={styles.progressBar}>
@@ -253,48 +315,53 @@ const CampaignCard = ({ campaign, onWithdraw, withdrawing }) => {
 
         <div style={styles.info}>
           <div style={styles.infoItem}>
-            <span>👥 {campaign.donorsCount} donors</span>
+            <span>{campaign.donorsCount} donors</span>
           </div>
           <div style={styles.infoItem}>
             <span>
               {campaign.isActive
-                ? `⏰ ${daysLeft > 0 ? `${daysLeft} days left` : "Ending soon"}`
-                : "⏰ Ended"}
+                ? `${daysLeft > 0 ? `${daysLeft} days left` : "Ending soon"}`
+                : "Ended"}
             </span>
           </div>
         </div>
 
-        {needsProof && (
-          <div style={styles.proofRequired}>
-            <div style={styles.proofIcon}>⚠️</div>
-            <div style={styles.proofText}>
-              <strong>Proof Required</strong><br />
-              Upload fund utilization proof to withdraw
+        {/* Action Section - Always at bottom */}
+        <div style={styles.actionSection}>
+          {needsProof && (
+            <div style={styles.proofRequired}>
+              <div style={styles.proofText}>
+                <strong>Proof Required</strong><br />
+                Upload fund utilization proof to withdraw
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {canWithdraw && (
-          <button
-            style={styles.withdrawBtn}
-            onClick={() => onWithdraw(campaign.id)}
-            disabled={withdrawing === campaign.id}
-          >
-            {withdrawing === campaign.id ? "Withdrawing..." : "💰 Withdraw Funds"}
-          </button>
-        )}
+          {canWithdraw && (
+            <button
+              style={styles.withdrawBtn}
+              onClick={(e) => {
+                e.stopPropagation();
+                onWithdraw(campaign.id);
+              }}
+              disabled={withdrawing === campaign.id}
+            >
+              {withdrawing === campaign.id ? "Withdrawing..." : "Withdraw Funds"}
+            </button>
+          )}
 
-        {campaign.withdrawn && (
-          <div style={styles.withdrawnNote}>
-            ✅ Funds have been withdrawn
-          </div>
-        )}
+          {campaign.withdrawn && (
+            <div style={styles.withdrawnNote}>
+              Funds have been withdrawn
+            </div>
+          )}
 
-        {!campaign.goalReached && !campaign.isActive && (
-          <div style={styles.failedNote}>
-            ⚠️ Goal not reached - Donors can claim refunds
-          </div>
-        )}
+          {!campaign.goalReached && !campaign.isActive && (
+            <div style={styles.failedNote}>
+              Goal not reached - Donors can claim refunds
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -356,12 +423,18 @@ const styles = {
     overflow: "hidden",
     boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
     border: "2px solid #e5e7eb",
-    transition: "transform 0.3s",
+    transition: "transform 0.3s, box-shadow 0.3s",
+    cursor: "pointer",
+    display: "flex",
+    flexDirection: "column",
+    height: "580px", // INCREASED HEIGHT for better spacing
+    width: "100%",
   },
   cardImage: {
     position: "relative",
-    height: "200px",
+    height: "180px", // Good image height
     overflow: "hidden",
+    flexShrink: 0,
   },
   image: {
     width: "100%",
@@ -370,41 +443,96 @@ const styles = {
   },
   badge: {
     position: "absolute",
-    top: "1rem",
-    right: "1rem",
+    top: "0.75rem",
+    right: "0.75rem",
     background: "rgba(255,255,255,0.95)",
     padding: "0.5rem 1rem",
-    borderRadius: "20px",
-    fontSize: "0.9rem",
+    borderRadius: "15px",
+    fontSize: "0.85rem",
     fontWeight: "600",
+    backdropFilter: "blur(10px)",
+    color: "#1f2937",
   },
   cardContent: {
-    padding: "1.5rem",
+    padding: "1.25rem",
+    display: "flex",
+    flexDirection: "column",
+    flex: 1,
+    height: "400px", // INCREASED content height
+  },
+  cardHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: "0.75rem",
+    marginBottom: "1rem",
+    minHeight: "50px", // INCREASED header height
   },
   cardTitle: {
-    fontSize: "1.25rem",
+    fontSize: "1.1rem",
     fontWeight: "700",
     color: "#1f2937",
-    marginBottom: "0.5rem",
-  },
-  cardDescription: {
-    fontSize: "0.95rem",
-    color: "#6b7280",
-    marginBottom: "1rem",
+    margin: 0,
+    flex: 1,
+    lineHeight: "1.3",
     display: "-webkit-box",
     WebkitLineClamp: 2,
     WebkitBoxOrient: "vertical",
     overflow: "hidden",
+    maxHeight: "2.6em", // Better title space
+  },
+  category: {
+    background: "#f3f4f6",
+    color: "#6b7280",
+    padding: "0.4rem 0.8rem",
+    borderRadius: "10px",
+    fontSize: "0.8rem",
+    fontWeight: "600",
+    whiteSpace: "nowrap",
+    height: "fit-content",
+  },
+  cardDescription: {
+    fontSize: "0.9rem",
+    color: "#6b7280",
+    lineHeight: "1.4",
+    display: "-webkit-box",
+    WebkitLineClamp: 3, // INCREASED to 3 lines
+    WebkitBoxOrient: "vertical",
+    overflow: "hidden",
+    height: "3.6em", // INCREASED description height
+    marginBottom: "1rem",
+  },
+  creationDate: {
+    display: "flex",
+    alignItems: "center",
+    gap: "0.5rem",
+    padding: "0.75rem 1rem",
+    background: "#f8fafc",
+    borderRadius: "8px",
+    border: "1px solid #e2e8f0",
+    marginBottom: "1rem",
+    minHeight: "40px", // INCREASED date section height
+  },
+  creationLabel: {
+    fontSize: "0.8rem",
+    color: "#64748b",
+    fontWeight: "600",
+  },
+  creationValue: {
+    fontSize: "0.8rem",
+    color: "#334155",
+    fontWeight: "500",
   },
   progressSection: {
     marginBottom: "1rem",
+    height: "40px", // INCREASED progress section height
   },
   progressBar: {
-    height: "8px",
+    height: "8px", // Slightly thicker progress bar
     background: "#e5e7eb",
     borderRadius: "10px",
     overflow: "hidden",
-    marginBottom: "0.5rem",
+    marginBottom: "0.75rem",
   },
   progressFill: {
     height: "100%",
@@ -415,41 +543,57 @@ const styles = {
     fontSize: "0.85rem",
     color: "#6b7280",
     textAlign: "right",
+    fontWeight: "600",
   },
   amounts: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
-    gap: "1rem",
-    marginBottom: "1rem",
+    gap: "0.75rem",
     padding: "1rem",
     background: "#f9fafb",
-    borderRadius: "10px",
+    borderRadius: "8px",
+    border: "1px solid #f1f5f9",
+    marginBottom: "1rem",
+    minHeight: "80px", // INCREASED amounts section height
   },
   amountLabel: {
-    fontSize: "0.85rem",
+    fontSize: "0.8rem",
     color: "#6b7280",
-    marginBottom: "0.25rem",
+    marginBottom: "0.5rem",
+    fontWeight: "600",
   },
   amountValue: {
     fontSize: "1.1rem",
     fontWeight: "700",
     color: "#1f2937",
+    lineHeight: "1.2",
   },
   ethValue: {
-    fontSize: "0.85rem",
+    fontSize: "0.8rem",
     color: "#6b7280",
+    marginTop: "0.25rem",
   },
   info: {
     display: "flex",
     justifyContent: "space-between",
-    marginBottom: "1rem",
-    fontSize: "0.9rem",
+    fontSize: "0.85rem",
     color: "#6b7280",
+    fontWeight: "500",
+    marginBottom: "1rem",
+    minHeight: "25px", // INCREASED info section height
   },
   infoItem: {
     display: "flex",
     alignItems: "center",
     gap: "0.5rem",
+  },
+  // Action section - FIXED at bottom with better height
+  actionSection: {
+    marginTop: "auto", // Pushes to bottom
+    minHeight: "60px", // INCREASED action section height
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "flex-end",
   },
   withdrawBtn: {
     width: "100%",
@@ -457,45 +601,55 @@ const styles = {
     background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
     color: "white",
     border: "none",
-    borderRadius: "10px",
-    fontSize: "1rem",
+    borderRadius: "8px",
+    fontSize: "0.95rem",
     fontWeight: "600",
     cursor: "pointer",
-    transition: "transform 0.2s",
+    transition: "transform 0.2s, box-shadow 0.2s",
+    minHeight: "45px",
   },
   withdrawnNote: {
     padding: "1rem",
     background: "#d1fae5",
     color: "#065f46",
-    borderRadius: "10px",
+    borderRadius: "8px",
     textAlign: "center",
     fontWeight: "600",
+    fontSize: "0.9rem",
+    minHeight: "45px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
   failedNote: {
     padding: "1rem",
     background: "#fef3c7",
     color: "#92400e",
-    borderRadius: "10px",
+    borderRadius: "8px",
     textAlign: "center",
     fontWeight: "600",
+    fontSize: "0.9rem",
+    minHeight: "45px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
   proofRequired: {
     display: "flex",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: "0.75rem",
     padding: "1rem",
     background: "#fef3c7",
     border: "2px solid #f59e0b",
-    borderRadius: "10px",
-    marginBottom: "1rem",
-  },
-  proofIcon: {
-    fontSize: "1.25rem",
+    borderRadius: "8px",
+    marginBottom: "0.75rem",
+    minHeight: "50px", // INCREASED proof message height
   },
   proofText: {
-    fontSize: "0.9rem",
+    fontSize: "0.85rem",
     color: "#92400e",
     lineHeight: "1.4",
+    fontWeight: "600",
   },
   loading: {
     textAlign: "center",
@@ -515,8 +669,10 @@ const styles = {
     padding: "4rem 1rem",
     color: "#6b7280",
   },
-  emptyIcon: {
-    fontSize: "4rem",
+  emptyText: {
+    fontSize: "2rem",
+    fontWeight: "600",
+    color: "#9ca3af",
     marginBottom: "1rem",
   },
 };

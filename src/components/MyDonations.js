@@ -66,7 +66,6 @@ const MyDonations = ({ account }) => {
     return (
       <div style={styles.container}>
         <div style={styles.empty}>
-          <div style={styles.emptyIcon}>🔐</div>
           <h3>Connect Your Wallet</h3>
           <p>Connect your wallet to see your donation history</p>
         </div>
@@ -89,7 +88,6 @@ const MyDonations = ({ account }) => {
     return (
       <div style={styles.container}>
         <div style={styles.empty}>
-          <div style={styles.emptyIcon}>💝</div>
           <h3>No Donations Yet</h3>
           <p>Start supporting campaigns to see your donation history here!</p>
         </div>
@@ -105,7 +103,7 @@ const MyDonations = ({ account }) => {
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h2 style={styles.title}>💝 My Donations</h2>
+        <h2 style={styles.title}>My Donations</h2>
         
         <div style={styles.totalCard}>
           <div style={styles.totalLabel}>Total Donated</div>
@@ -168,7 +166,7 @@ const MyDonations = ({ account }) => {
                         rel="noopener noreferrer"
                         style={styles.transactionLink}
                       >
-                        🔗 {tx.amount} ETH - View on BaseScan
+                        {tx.amount} ETH - View on BaseScan
                       </a>
                       <div style={styles.transactionDate}>
                         {new Date(tx.timestamp).toLocaleString()}
@@ -183,7 +181,6 @@ const MyDonations = ({ account }) => {
                 </div>
               ) : (
                 <div style={styles.noTransactionInfo}>
-                  <div style={styles.noTransactionIcon}>💝</div>
                   <div style={styles.noTransactionText}>
                     Transaction details not available
                   </div>
@@ -403,10 +400,6 @@ const styles = {
     textAlign: "center",
     padding: "4rem 1rem",
     color: "#6b7280",
-  },
-  emptyIcon: {
-    fontSize: "4rem",
-    marginBottom: "1rem",
   },
 };
 

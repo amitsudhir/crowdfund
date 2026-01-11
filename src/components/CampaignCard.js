@@ -54,8 +54,16 @@ const CampaignCard = ({ campaign, onClick }) => {
     }
   };
 
+  const handleCardClick = (e) => {
+    // Don't trigger navigation if clicking on buttons
+    if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+      return;
+    }
+    onClick();
+  };
+
   return (
-    <div style={styles.card} onClick={onClick}>
+    <div style={styles.card} onClick={handleCardClick}>
       <div style={styles.imageContainer}>
         {campaign.imageURI ? (
           <img
@@ -67,7 +75,7 @@ const CampaignCard = ({ campaign, onClick }) => {
             }}
           />
         ) : (
-          <div style={styles.placeholder}>📷</div>
+          <div style={styles.placeholder}>No Image</div>
         )}
         <div style={{ ...styles.badge, background: getStatusColor() }}>
           {status}
@@ -75,19 +83,20 @@ const CampaignCard = ({ campaign, onClick }) => {
       </div>
 
       <div style={styles.content}>
-        <div style={styles.category}>{campaign.category}</div>
-        <h3 style={styles.title}>{campaign.title}</h3>
+        <div style={styles.cardHeader}>
+          <h3 style={styles.title}>{campaign.title}</h3>
+          <div style={styles.category}>{campaign.category}</div>
+        </div>
+        
         <p style={styles.description}>
-          {campaign.description.length > 100
-            ? campaign.description.substring(0, 100) + "..."
-            : campaign.description}
+          {campaign.description}
         </p>
 
         <div style={styles.progressContainer}>
           <div style={styles.progressBar}>
             <div style={{ ...styles.progressFill, width: `${progress}%` }} />
           </div>
-          <div style={styles.progressText}>{progress.toFixed(1)}%</div>
+          <div style={styles.progressText}>{progress.toFixed(1)}% funded</div>
         </div>
 
         <div style={styles.stats}>
@@ -95,25 +104,23 @@ const CampaignCard = ({ campaign, onClick }) => {
             <div style={styles.statValue}>
               {CURRENCY.symbol}{ethToInr(ethers.formatEther(campaign.raisedAmount))}
             </div>
-            <div style={styles.statLabel}>Raised</div>
+            <div style={styles.statLabel}>Raised ({ethers.formatEther(campaign.raisedAmount)} ETH)</div>
           </div>
           <div style={styles.stat}>
             <div style={styles.statValue}>
               {CURRENCY.symbol}{ethToInr(ethers.formatEther(campaign.goalAmount))}
             </div>
-            <div style={styles.statLabel}>Goal</div>
-          </div>
-          <div style={styles.stat}>
-            <div style={styles.statValue}>{campaign.donorsCount.toString()}</div>
-            <div style={styles.statLabel}>Donors</div>
+            <div style={styles.statLabel}>Goal ({ethers.formatEther(campaign.goalAmount)} ETH)</div>
           </div>
         </div>
 
         <div style={styles.footer}>
-          <div style={styles.creator}>
-            👤 {campaign.creatorInfo || "Anonymous"}
+          <div style={styles.infoItem}>
+            <span>{campaign.donorsCount.toString()} donors</span>
           </div>
-          <div style={styles.time}>⏰ {timeLeft}</div>
+          <div style={styles.infoItem}>
+            <span>{timeLeft}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -128,16 +135,17 @@ const styles = {
     boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
     cursor: "pointer",
     transition: "transform 0.3s, box-shadow 0.3s",
-    ":hover": {
-      transform: "translateY(-5px)",
-      boxShadow: "0 8px 25px rgba(0,0,0,0.15)",
-    },
+    display: "flex",
+    flexDirection: "column",
+    height: "580px", // SAME HEIGHT as MyCampaigns cards
+    width: "100%",
   },
   imageContainer: {
     position: "relative",
     width: "100%",
-    height: "200px",
+    height: "180px", // SAME HEIGHT as MyCampaigns cards
     overflow: "hidden",
+    flexShrink: 0,
   },
   image: {
     width: "100%",
@@ -151,53 +159,80 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-    fontSize: "4rem",
+    fontSize: "1rem",
+    color: "white",
+    fontWeight: "600",
   },
   badge: {
     position: "absolute",
-    top: "10px",
-    right: "10px",
+    top: "0.75rem",
+    right: "0.75rem",
     padding: "0.5rem 1rem",
-    borderRadius: "20px",
+    borderRadius: "15px",
     color: "white",
     fontWeight: "600",
     fontSize: "0.85rem",
   },
   content: {
-    padding: "1.5rem",
+    padding: "1.25rem",
+    display: "flex",
+    flexDirection: "column",
+    flex: 1,
+    height: "400px", // SAME HEIGHT as MyCampaigns cards
+  },
+  cardHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: "0.75rem",
+    marginBottom: "1rem",
+    minHeight: "50px", // SAME HEIGHT as MyCampaigns cards
   },
   category: {
-    display: "inline-block",
     background: "#f3f4f6",
     color: "#6b7280",
-    padding: "0.25rem 0.75rem",
-    borderRadius: "12px",
-    fontSize: "0.85rem",
+    padding: "0.4rem 0.8rem",
+    borderRadius: "10px",
+    fontSize: "0.8rem",
     fontWeight: "600",
-    marginBottom: "0.75rem",
+    whiteSpace: "nowrap",
+    height: "fit-content",
   },
   title: {
-    fontSize: "1.25rem",
+    fontSize: "1.1rem",
     fontWeight: "700",
     color: "#1f2937",
-    margin: "0 0 0.5rem 0",
+    margin: 0,
+    flex: 1,
+    lineHeight: "1.3",
+    display: "-webkit-box",
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: "vertical",
+    overflow: "hidden",
+    maxHeight: "2.6em", // SAME HEIGHT as MyCampaigns cards
   },
   description: {
     color: "#6b7280",
-    fontSize: "0.95rem",
-    lineHeight: "1.5",
+    fontSize: "0.9rem",
+    lineHeight: "1.4",
     marginBottom: "1rem",
+    display: "-webkit-box",
+    WebkitLineClamp: 3, // SAME as MyCampaigns cards
+    WebkitBoxOrient: "vertical",
+    overflow: "hidden",
+    height: "3.6em", // SAME HEIGHT as MyCampaigns cards
   },
   progressContainer: {
     marginBottom: "1rem",
+    height: "40px", // SAME HEIGHT as MyCampaigns cards
   },
   progressBar: {
     width: "100%",
-    height: "8px",
+    height: "8px", // SAME HEIGHT as MyCampaigns cards
     background: "#e5e7eb",
     borderRadius: "10px",
     overflow: "hidden",
-    marginBottom: "0.5rem",
+    marginBottom: "0.75rem",
   },
   progressFill: {
     height: "100%",
@@ -208,26 +243,34 @@ const styles = {
     fontSize: "0.85rem",
     color: "#6b7280",
     textAlign: "right",
+    fontWeight: "600",
   },
   stats: {
-    display: "flex",
-    justifyContent: "space-between",
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "0.75rem",
     marginBottom: "1rem",
-    paddingTop: "1rem",
-    borderTop: "1px solid #e5e7eb",
+    padding: "1rem",
+    background: "#f9fafb",
+    borderRadius: "8px",
+    border: "1px solid #f1f5f9",
+    minHeight: "80px", // SAME HEIGHT as MyCampaigns cards
   },
   stat: {
-    textAlign: "center",
+    display: "flex",
+    flexDirection: "column",
   },
   statValue: {
-    fontSize: "1rem",
+    fontSize: "1.1rem",
     fontWeight: "700",
     color: "#1f2937",
+    lineHeight: "1.2",
   },
   statLabel: {
-    fontSize: "0.75rem",
-    color: "#9ca3af",
+    fontSize: "0.8rem",
+    color: "#6b7280",
     marginTop: "0.25rem",
+    fontWeight: "600",
   },
   footer: {
     display: "flex",
@@ -235,12 +278,14 @@ const styles = {
     alignItems: "center",
     fontSize: "0.85rem",
     color: "#6b7280",
-  },
-  creator: {
     fontWeight: "500",
+    marginTop: "auto", // Pushes to bottom
+    minHeight: "25px", // SAME HEIGHT as MyCampaigns cards
   },
-  time: {
-    fontWeight: "600",
+  infoItem: {
+    display: "flex",
+    alignItems: "center",
+    gap: "0.5rem",
   },
 };
 

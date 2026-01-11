@@ -43,7 +43,7 @@ const ActivityFeed = () => {
 
   return (
     <div style={styles.container}>
-      <h3 style={styles.title}>🔥 Recent Activity</h3>
+      <h3 style={styles.title}>Recent Activity</h3>
       
       {loading ? (
         <div style={styles.loading}>Loading...</div>
@@ -53,7 +53,6 @@ const ActivityFeed = () => {
         <div style={styles.list}>
           {activities.map((activity, index) => (
             <div key={index} style={styles.activityItem}>
-              <div style={styles.activityIcon}>💰</div>
               <div style={styles.activityContent}>
                 <div style={styles.activityText}>
                   <strong>{shortenAddress(activity.donor)}</strong> donated{" "}
@@ -95,9 +94,6 @@ const styles = {
     background: "#f9fafb",
     borderRadius: "10px",
     alignItems: "center",
-  },
-  activityIcon: {
-    fontSize: "1.5rem",
   },
   activityContent: {
     flex: 1,

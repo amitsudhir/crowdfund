@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { getReadOnlyContract } from "../config/contract";
 import CampaignCard from "./CampaignCard";
 import CampaignDetail from "./CampaignDetail";
 import SearchBar from "./SearchBar";
+import { CATEGORIES } from "../config/config";
 
-const CampaignList = ({ account, refreshTrigger }) => {
+const CampaignList = ({ account, refreshTrigger, showHeader = true }) => {
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCampaign, setSelectedCampaign] = useState(null);
   const [filter, setFilter] = useState("ALL");
   const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("ALL");
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadCampaigns();
@@ -58,29 +62,35 @@ const CampaignList = ({ account, refreshTrigger }) => {
             Number(c.raisedAmount) < Number(c.goalAmount)
         );
         break;
-      case "MY_CAMPAIGNS":
-        filtered = campaigns.filter(
-          (c) => account && c.owner.toLowerCase() === account.toLowerCase()
-        );
-        break;
       default:
         filtered = campaigns;
+    }
+    
+    // Filter by category
+    if (categoryFilter !== "ALL") {
+      filtered = filtered.filter(
+        (c) => c.category.toLowerCase() === categoryFilter.toLowerCase()
+      );
+    }
+    
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter((c) =>
+        c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.creatorInfo.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
     
     return filtered;
   };
 
+  const handleCampaignClick = (campaign) => {
+    navigate(`/campaign/${campaign.id.toString()}`);
+  };
+
   let filteredCampaigns = getFilteredCampaigns();
-  
-  // Apply search filter
-  if (searchTerm) {
-    filteredCampaigns = filteredCampaigns.filter((c) =>
-      c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.creatorInfo.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }
 
   if (loading) {
     return (
@@ -93,47 +103,61 @@ const CampaignList = ({ account, refreshTrigger }) => {
 
   return (
     <div style={styles.container}>
-      <SearchBar searchTerm={searchTerm} onSearch={setSearchTerm} />
-      
-      <div style={styles.mainContent}>
-        <div style={styles.filters}>
-          {["ALL", "ACTIVE", "FUNDED", "EXPIRED", "MY_CAMPAIGNS"].map((f) => (
-            <button
-              key={f}
-              style={{
-                ...styles.filterBtn,
-                ...(filter === f ? styles.filterBtnActive : {}),
-              }}
-              onClick={() => setFilter(f)}
-              disabled={f === "MY_CAMPAIGNS" && !account}
-            >
-              {f === "MY_CAMPAIGNS" ? "MY CAMPAIGNS" : f}
-            </button>
-          ))}
+      {showHeader && (
+        <div style={styles.header}>
+          <h2 style={styles.title}>Explore Campaigns</h2>
+          <p style={styles.subtitle}>Discover and support amazing causes</p>
         </div>
-
-        {filteredCampaigns.length === 0 ? (
-          <div style={styles.empty}>
-            <div style={styles.emptyIcon}>📭</div>
-            <h3>No campaigns found</h3>
-            {filter === "MY_CAMPAIGNS" ? (
-              <p>You haven't created any campaigns yet. Click "Create Campaign" to start!</p>
-            ) : (
-              <p>Be the first to create a campaign!</p>
-            )}
-          </div>
-        ) : (
-          <div style={styles.grid}>
-            {filteredCampaigns.map((campaign) => (
-              <CampaignCard
-                key={campaign.id.toString()}
-                campaign={campaign}
-                onClick={() => setSelectedCampaign(campaign)}
-              />
+      )}
+      
+      <div style={styles.filtersContainer}>
+        <SearchBar 
+          searchTerm={searchTerm} 
+          onSearch={setSearchTerm}
+          categoryFilter={categoryFilter}
+          onCategoryChange={setCategoryFilter}
+          account={account}
+        />
+        
+        <div style={styles.statusFilters}>
+          <label style={styles.filterLabel}>Status:</label>
+          <div style={styles.filters}>
+            {["ALL", "ACTIVE", "FUNDED", "EXPIRED"].map((f) => (
+              <button
+                key={f}
+                style={{
+                  ...styles.filterBtn,
+                  ...(filter === f ? styles.filterBtnActive : {}),
+                }}
+                onClick={() => setFilter(f)}
+              >
+                {f}
+              </button>
             ))}
           </div>
-        )}
+        </div>
       </div>
+
+      {filteredCampaigns.length === 0 ? (
+        <div style={styles.empty}>
+          <h3>No campaigns found</h3>
+          {searchTerm || categoryFilter !== "ALL" ? (
+            <p>Try adjusting your search or filters to find more campaigns.</p>
+          ) : (
+            <p>Be the first to create a campaign!</p>
+          )}
+        </div>
+      ) : (
+        <div style={styles.grid}>
+          {filteredCampaigns.map((campaign) => (
+            <CampaignCard
+              key={campaign.id.toString()}
+              campaign={campaign}
+              onClick={() => handleCampaignClick(campaign)}
+            />
+          ))}
+        </div>
+      )}
 
       {selectedCampaign && (
         <CampaignDetail
@@ -156,25 +180,54 @@ const styles = {
     margin: "0 auto",
     padding: "2rem 1rem",
   },
-  mainContent: {
-    width: "100%",
+  header: {
+    textAlign: "center",
+    marginBottom: "2rem",
+  },
+  title: {
+    fontSize: "2rem",
+    fontWeight: "700",
+    margin: "0 0 0.5rem 0",
+    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent",
+    backgroundClip: "text",
+  },
+  subtitle: {
+    fontSize: "1.1rem",
+    color: "#6b7280",
+    margin: 0,
+  },
+  filtersContainer: {
+    marginBottom: "2rem",
+  },
+  statusFilters: {
+    display: "flex",
+    gap: "1rem",
+    alignItems: "center",
+    marginTop: "1rem",
+  },
+  filterLabel: {
+    fontSize: "0.9rem",
+    fontWeight: "600",
+    color: "#374151",
   },
   filters: {
     display: "flex",
-    gap: "1rem",
-    marginBottom: "2rem",
+    gap: "0.5rem",
     flexWrap: "wrap",
   },
   filterBtn: {
-    padding: "0.75rem 1.5rem",
+    padding: "0.5rem 1rem",
     border: "2px solid #e5e7eb",
     background: "white",
-    borderRadius: "25px",
+    borderRadius: "20px",
     cursor: "pointer",
     fontWeight: "600",
-    fontSize: "0.95rem",
+    fontSize: "0.85rem",
     color: "#6b7280",
     transition: "all 0.3s",
+    whiteSpace: "nowrap",
   },
   filterBtnActive: {
     background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
@@ -203,10 +256,6 @@ const styles = {
     textAlign: "center",
     padding: "4rem 1rem",
     color: "#6b7280",
-  },
-  emptyIcon: {
-    fontSize: "4rem",
-    marginBottom: "1rem",
   },
 };
 
