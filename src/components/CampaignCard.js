@@ -109,16 +109,18 @@ const CampaignCard = ({ campaign, onClick }) => {
 
         <div style={styles.stats}>
           <div style={styles.stat}>
+            <div style={styles.statLabel}>Raised</div>
             <div style={styles.statValue}>
               {CURRENCY.symbol}{ethToInr(ethers.formatEther(campaign.raisedAmount))}
             </div>
-            <div style={styles.statLabel}>Raised ({ethers.formatEther(campaign.raisedAmount)} ETH)</div>
+            <div style={styles.statSubLabel}>{ethers.formatEther(campaign.raisedAmount)} ETH</div>
           </div>
           <div style={styles.stat}>
+            <div style={styles.statLabel}>Goal</div>
             <div style={styles.statValue}>
               {CURRENCY.symbol}{ethToInr(ethers.formatEther(campaign.goalAmount))}
             </div>
-            <div style={styles.statLabel}>Goal ({ethers.formatEther(campaign.goalAmount)} ETH)</div>
+            <div style={styles.statSubLabel}>{ethers.formatEther(campaign.goalAmount)} ETH</div>
           </div>
         </div>
 
@@ -250,17 +252,27 @@ const styles = {
   stats: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
-    gap: "0.75rem",
+    gap: "1rem",
     marginBottom: "1rem",
     padding: "1rem",
     background: "#f9fafb",
     borderRadius: "8px",
     border: "1px solid #f1f5f9",
-    minHeight: "80px", // Fixed stats height
+    minHeight: "94px",
+    alignItems: "center",
   },
   stat: {
     display: "flex",
     flexDirection: "column",
+    gap: "0.35rem",
+  },
+  statLabel: {
+    fontSize: "0.75rem",
+    color: "#6b7280",
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: "0.05em",
+    lineHeight: "1",
   },
   statValue: {
     fontSize: "1.1rem",
@@ -268,11 +280,11 @@ const styles = {
     color: "#1f2937",
     lineHeight: "1.2",
   },
-  statLabel: {
-    fontSize: "0.8rem",
-    color: "#6b7280",
-    marginTop: "0.25rem",
-    fontWeight: "600",
+  statSubLabel: {
+    fontSize: "0.75rem",
+    color: "#9ca3af",
+    fontWeight: "500",
+    lineHeight: "1",
   },
   footer: {
     display: "flex",

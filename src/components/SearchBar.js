@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { CATEGORIES } from "../config/config";
 
 const SearchBar = ({ searchTerm, onSearch, categoryFilter, onCategoryChange, account }) => {
   const navigate = useNavigate();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   const handleCreateCampaign = () => {
     if (!account) {
@@ -14,8 +16,40 @@ const SearchBar = ({ searchTerm, onSearch, categoryFilter, onCategoryChange, acc
     navigate('/create');
   };
 
+  const handleCategorySelect = (category) => {
+    onCategoryChange(category);
+    setIsDropdownOpen(false);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const getCategoryLabel = () => {
+    return categoryFilter === "ALL" ? "All Categories" : categoryFilter;
+  };
+
   return (
-    <div style={styles.container}>
+    <>
+      <style>
+        {`
+          .dropdown-item:hover {
+            background: #f3f4f6 !important;
+          }
+          .dropdown-item.active:hover {
+            background: #5568d3 !important;
+          }
+        `}
+      </style>
+      <div style={styles.container}>
       <div style={styles.searchRow}>
         <div style={styles.searchBox}>
           <input
@@ -32,19 +66,42 @@ const SearchBar = ({ searchTerm, onSearch, categoryFilter, onCategoryChange, acc
           )}
         </div>
         
-        <div style={styles.categoryFilter}>
-          <select
+        <div style={styles.categoryFilter} ref={dropdownRef}>
+          <button
             style={styles.categorySelect}
-            value={categoryFilter}
-            onChange={(e) => onCategoryChange(e.target.value)}
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           >
-            <option value="ALL">All Categories</option>
-            {CATEGORIES.map((category) => (
-              <option key={category} value={category}>
-                {category}
-              </option>
-            ))}
-          </select>
+            {getCategoryLabel()}
+            <span style={styles.arrow}>{isDropdownOpen ? "▲" : "▼"}</span>
+          </button>
+          
+          {isDropdownOpen && (
+            <div style={styles.dropdownMenu}>
+              <div
+                className={`dropdown-item ${categoryFilter === "ALL" ? "active" : ""}`}
+                style={{
+                  ...styles.dropdownItem,
+                  ...(categoryFilter === "ALL" ? styles.dropdownItemActive : {}),
+                }}
+                onClick={() => handleCategorySelect("ALL")}
+              >
+                All Categories
+              </div>
+              {CATEGORIES.map((category) => (
+                <div
+                  key={category}
+                  className={`dropdown-item ${categoryFilter === category ? "active" : ""}`}
+                  style={{
+                    ...styles.dropdownItem,
+                    ...(categoryFilter === category ? styles.dropdownItemActive : {}),
+                  }}
+                  onClick={() => handleCategorySelect(category)}
+                >
+                  {category}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
       
@@ -60,6 +117,7 @@ const SearchBar = ({ searchTerm, onSearch, categoryFilter, onCategoryChange, acc
         </button>
       </div>
     </div>
+    </>
   );
 };
 
@@ -102,8 +160,7 @@ const styles = {
     padding: "0.25rem",
   },
   categoryFilter: {
-    display: "flex",
-    alignItems: "center",
+    position: "relative",
   },
   categorySelect: {
     padding: "0.75rem 1rem",
@@ -114,9 +171,46 @@ const styles = {
     fontWeight: "600",
     color: "#6b7280",
     cursor: "pointer",
-    minWidth: "150px",
+    minWidth: "180px",
     boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
     transition: "all 0.3s",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "0.5rem",
+  },
+  arrow: {
+    fontSize: "0.7rem",
+    color: "#6b7280",
+  },
+  dropdownMenu: {
+    position: "absolute",
+    top: "calc(100% + 0.5rem)",
+    left: 0,
+    right: 0,
+    background: "white",
+    border: "2px solid #e5e7eb",
+    borderRadius: "15px",
+    boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+    zIndex: 1000,
+    maxHeight: "300px",
+    overflowY: "auto",
+    padding: "0.5rem",
+  },
+  dropdownItem: {
+    padding: "0.75rem 1rem",
+    borderRadius: "10px",
+    fontSize: "0.9rem",
+    fontWeight: "500",
+    color: "#4b5563",
+    cursor: "pointer",
+    transition: "all 0.2s",
+    marginBottom: "0.25rem",
+  },
+  dropdownItemActive: {
+    background: "#667eea",
+    color: "white",
+    fontWeight: "600",
   },
   createButtonContainer: {
     display: "flex",
