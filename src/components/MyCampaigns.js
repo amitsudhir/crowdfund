@@ -63,8 +63,7 @@ const MyCampaigns = ({ account }) => {
   const handleWithdraw = async (campaignId) => {
     try {
       setWithdrawing(campaignId);
-      const { provider } = await getContract();
-      const { contract } = await getContract();
+      const { contract, provider } = await getContract();
       
       // Find the campaign to get details
       const campaign = campaigns.find(c => c.id === campaignId);
