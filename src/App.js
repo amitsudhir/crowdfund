@@ -68,7 +68,8 @@ function App() {
 
   const connectWallet = async () => {
     if (!window.ethereum) {
-      toast.error("Please install MetaMask!");
+      // Redirect to MetaMask Chrome Web Store page
+      window.open("https://chromewebstore.google.com/detail/metamask/nkbihfbeogaeaoehlefnkodbefgpgknn?hl=en", "_blank");
       return;
     }
 

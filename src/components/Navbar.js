@@ -5,6 +5,7 @@ import "./Navbar.css";
 
 const Navbar = ({ account, onConnect }) => {
   const location = useLocation();
+  const hasMetaMask = typeof window !== 'undefined' && window.ethereum;
 
   const shortenAddress = (addr) => {
     if (!addr) return "";
@@ -59,8 +60,14 @@ const Navbar = ({ account, onConnect }) => {
               <span style={styles.address} className="address">{shortenAddress(account)}</span>
             </div>
           ) : (
-            <button style={styles.connectBtn} onClick={onConnect}>
-              Connect Wallet
+            <button 
+              style={{
+                ...styles.connectBtn,
+                ...(hasMetaMask ? {} : styles.downloadBtn)
+              }} 
+              onClick={onConnect}
+            >
+              {hasMetaMask ? "Connect Wallet" : "Download MetaMask"}
             </button>
           )}
         </div>
@@ -172,6 +179,11 @@ const styles = {
     cursor: "pointer",
     fontSize: "1rem",
     transition: "transform 0.2s",
+  },
+  downloadBtn: {
+    background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+    color: "white",
+    boxShadow: "0 4px 15px rgba(245, 158, 11, 0.3)",
   },
 };
 
